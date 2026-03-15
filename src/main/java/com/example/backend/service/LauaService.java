@@ -16,8 +16,13 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
+import com.example.backend.dto.LauaPositsioonDTO;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 
 @Slf4j
 @Service
@@ -26,14 +31,18 @@ public class LauaService {
 
     private final RestoraniLaudRepository lauaRepository;
     private final BroneeringRepository broneeringRepository;
+    private final Map<Long, LauaPositsioonDTO> positsioonOverride = new ConcurrentHashMap<>();
 
     public List<RestoraniLaud> getAllLauad() {
-        return lauaRepository.findAll();
+        return lauaRepository.findAll().stream()
+                .map(this::applyOverride)
+                .collect(Collectors.toList());
     }
 
     /**
-     * Tagastab kõik lauad, et saaliplaanis oleksid värvitud iga laud,
-     * mitte ainult vabad lauad.
+     * Tagasta kõik soovitused
+     * @param filter Külastaja poolt valitud filtrid
+     * @return Tagasta lauad, mis ei ole broneeritud, ning järjesta need vastavalt skoorile
      */
     public List<LauaSoovitusedDTO> getSoovitusi(BroneeringFilterRequest filter) {
         LocalDateTime algusDt = LocalDateTime.of(filter.getKuupaev(), filter.getAlgusAeg());
@@ -45,24 +54,82 @@ public class LauaService {
                 .map(b -> b.getLaud().getId())
                 .collect(Collectors.toSet());
 
-        List<RestoraniLaud> all = lauaRepository.findAll();
+        List<RestoraniLaud> all = lauaRepository.findAll().stream()
+                .map(this::applyOverride)
+                .toList();
 
         return all.stream()
                 .map(t -> {
-                    boolean available   = !occupiedIds.contains(t.getId());
-                    boolean meetsFilter = meetsFilter(t, filter);
-                    int score = (available && meetsFilter)
+                    boolean vaba = !occupiedIds.contains(t.getId());
+                    boolean meetsFilter = sobibFiltriga(t, filter);
+                    int score = (vaba && meetsFilter)
                             ? calculateScore(t, filter)
-                            : (available ? 0 : -1);
-                    return LauaSoovitusedDTO.from(t, available, meetsFilter, score);
+                            : (vaba ? 0 : -1);
+                    return LauaSoovitusedDTO.from(t, vaba, meetsFilter, score);
                 })
                 .sorted(Comparator.comparingInt(LauaSoovitusedDTO::getSkoor).reversed())
                 .collect(Collectors.toList());
     }
 
+    public void updatePositsioon(Long id, LauaPositsioonDTO dto) {
+        if (!lauaRepository.existsById(id)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Lauda ei leitud: " + id);
+        }
+        positsioonOverride.put(id, dto);
+    }
+
+    /**
+     * Muuda positsioone ka backendis, kui on muudetud admin lehel
+     * @param t Laua informaatsioon
+     * @return Uuenenud laua informatsioon
+     */
+    private RestoraniLaud applyOverride(RestoraniLaud t) {
+        LauaPositsioonDTO ov = positsioonOverride.get(t.getId());
+        if (ov == null) return t; // Kui pole muutunud, ära tee midagi
+        int x = ov.getPosX(), y = ov.getPosY();
+        return RestoraniLaud.builder()
+                .id(t.getId())
+                .lauaNumber(t.getLauaNumber())
+                .mahutavus(t.getMahutavus())
+                .tsoon(t.getTsoon())
+                .aknaAll(computeAknaAll(x, y, t.getTsoon()))
+                .lastenurk(computeLastenurk(x, y, t.getWidth(), t.getHeight()))
+                .posX(x).posY(y)
+                .width(t.getWidth()).height(t.getHeight())
+                .build();
+    }
+
+    /**
+     * Leia kas laud on akna all või mitte
+     * @param posX Laua X positsioon
+     * @param posY Laua Y positsioon
+     * @param tsoon Tsoon, kus laud asub
+     * @return Laud on akna all juhul, kui X on suurem kui 400, Y on väiiksem kui 150 või laud on terrassil. Privaatruum ei saa kunagi olla akna all.
+     */
+    private static boolean computeAknaAll(int posX, int posY, TsooniTyyp tsoon) {
+        if (tsoon == TsooniTyyp.PRIVAATRUUM) return false;
+        return posY < 150 || posX > 400 || tsoon == TsooniTyyp.TERRASS;
+    }
+
+    /**
+     * Arvuta, kas laud on lastenurga lähedal
+     * @param posX Laua X positsioon
+     * @param posY Laua Y positsioon
+     * @param width Laua laius
+     * @param height Laua pikkus
+     * @return Laud on lastenurga juures siis, kui on 200 ühiku raadiuses.
+     */
+
+    private static boolean computeLastenurk(int posX, int posY, int width, int height) {
+        // Lastenurga punkt on (10, 350)
+        double cx = posX + width / 2.0;
+        double cy = posY + height / 2.0;
+        return Math.sqrt((cx - 10) * (cx - 10) + (cy - 350) * (cy - 350)) <= 200;
+    }
+
     /**
      * Tagastab paarid laudadest, mida saab kokku lükata, kui ükski üksik laud ei mahu suurele grupile.
-     * Tingimused: mõlemad lauad vabad, samas tsoonis, sama rida (posY ühtib), x-serv kaugus &lt; 180 SVG ühikut.
+     * Tingimused: mõlemad lauad vabad, samas tsoonis, sama rida (posY ühtib), x-serv kaugus alt; 100 SVG ühikut.
      */
     public List<KombineeritudLauadDTO> getKombineeritudSoovitused(BroneeringFilterRequest filter) {
         log.info("getKombineeritudSoovitused: kylalisteArv={}, kuupaev={}, algus={}, lopp={}",
@@ -127,17 +194,19 @@ public class LauaService {
         return kombineeringud;
     }
 
-    /** Kontrollime, kas kaks lauda on üksteise lähedal x-teljel (serv-serv kaugus < 100 SVG ühikut). */
-    private boolean areClose(LauaSoovitusedDTO a, LauaSoovitusedDTO b) {
-        return xGap(a, b) < 100;
-    }
-
     /** Arvutab serv-serv kauguse x-teljel kahe ristküliku vahel. */
     private int xGap(LauaSoovitusedDTO a, LauaSoovitusedDTO b) {
         return Math.max(0, Math.max(a.getPosX(), b.getPosX())
                 - Math.min(a.getPosX() + a.getWidth(), b.getPosX() + b.getWidth()));
     }
 
+    /**
+     * Arvutame kombineeritud skoori
+     * @param l1 Esimese laua info
+     * @param l2 Teise laua info
+     * @param f Külastaja filtreeringu eelistused
+     * @return Skoor, mis lauad kokku saavad, kui need kombineerida
+     */
     private int calculateCombinedScore(LauaSoovitusedDTO l1, LauaSoovitusedDTO l2, BroneeringFilterRequest f) {
         int skoor = 100;
         int ylejaak = (l1.getMahutavus() + l2.getMahutavus()) - f.getKylalisteArv();
@@ -148,9 +217,12 @@ public class LauaService {
         return skoor;
     }
 
-    // ── helpers ──────────────────────────────────────────────────────────────
+    // ── Abistajad ──────────────────────────────────────────────────────────────
 
-    private boolean meetsFilter(RestoraniLaud t, BroneeringFilterRequest f) {
+    /**
+     * Kontrollime, ega soovitused ei lähe külastaja filtreerimisega vastuollu
+     */
+    private boolean sobibFiltriga(RestoraniLaud t, BroneeringFilterRequest f) {
         if (t.getMahutavus() < f.getKylalisteArv()) return false;
         if (f.getTsoon() != null && t.getTsoon() != f.getTsoon()) return false;
         return true;

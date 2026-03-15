@@ -6,7 +6,8 @@ async function request(url, options = {}) {
     const msg = await res.text().catch(() => res.statusText)
     throw Object.assign(new Error(msg), { status: res.status })
   }
-  return res.json()
+  const text = await res.text()
+  return text ? JSON.parse(text) : null
 }
 
 export const api = {
@@ -54,5 +55,13 @@ export const api = {
 
   cancelBooking(id) {
     return request('/bookings/' + id, { method: 'DELETE' })
+  },
+
+  updateLauaPositsioon(id, data) {
+    return request('/tables/' + id + '/position', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    })
   },
 }

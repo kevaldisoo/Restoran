@@ -2,6 +2,7 @@
 package com.example.backend.controller;
 
 import com.example.backend.dto.BroneeringFilterRequest;
+import com.example.backend.dto.LauaPositsioonDTO;
 import com.example.backend.dto.KombineeritudLauadDTO;
 import com.example.backend.dto.LauaSoovitusedDTO;
 import com.example.backend.model.RestoraniLaud;
@@ -24,11 +25,13 @@ public class LauaController {
 
     private final LauaService lauaService;
 
+    // Kõik lauad, mida näidatakse
     @GetMapping
     public ResponseEntity<List<RestoraniLaud>> getAllLauad() {
         return ResponseEntity.ok(lauaService.getAllLauad());
     }
 
+    // Üksikute laudade soovitused
     @GetMapping("/recommendations")
     public ResponseEntity<List<LauaSoovitusedDTO>> getRecommendations(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate kuupaev,
@@ -43,6 +46,7 @@ public class LauaController {
                 buildFilter(kuupaev, algusAeg, loppAeg, kylalised, tsoon, aknaAll, lastenurk, privaatsus)));
     }
 
+    // Kombineeritud laudade soovitused
     @GetMapping("/combined-recommendations")
     public ResponseEntity<List<KombineeritudLauadDTO>> getCombinedRecommendations(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate kuupaev,
@@ -55,6 +59,15 @@ public class LauaController {
             @RequestParam(required = false) Boolean privaatsus) {
         return ResponseEntity.ok(lauaService.getKombineeritudSoovitused(
                 buildFilter(kuupaev, algusAeg, loppAeg, kylalised, tsoon, aknaAll, lastenurk, privaatsus)));
+    }
+
+    // Iga laua asukoht, mis uueneb liigutamisel
+    @PutMapping("/{id}/position")
+    public ResponseEntity<Void> updatePositsioon(
+            @PathVariable Long id,
+            @RequestBody LauaPositsioonDTO dto) {
+        lauaService.updatePositsioon(id, dto);
+        return ResponseEntity.ok().build();
     }
 
     private BroneeringFilterRequest buildFilter(LocalDate kuupaev, LocalTime algusAeg, LocalTime loppAeg,

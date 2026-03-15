@@ -67,7 +67,7 @@ public class DataInitializer implements CommandLineRunner {
 
         // ── Privaatruumid — 3 8-kohalist lauda (T19–T21) ─────────────────────────
         t.add(laud("T19", 8,  TsooniTyyp.PRIVAATRUUM, false, true,  45,  490, 90, 60));
-        t.add(laud("T20", 8,  TsooniTyyp.PRIVAATRUUM, false,  true, 330, 490, 90, 60));
+        t.add(laud("T20", 8,  TsooniTyyp.PRIVAATRUUM, false,  false, 330, 490, 90, 60));
         t.add(laud("T21", 8, TsooniTyyp.PRIVAATRUUM, false,  false, 635, 490, 90, 60));
 
         return t;
@@ -91,18 +91,28 @@ public class DataInitializer implements CommandLineRunner {
         "Valge", "Roos", "Lips", "Kala", "Lind", "Karis"
     };
 
-    private static final LocalTime[][] TIME_SLOTS = {
-        { LocalTime.of(11, 30), LocalTime.of(13, 30) },
-        { LocalTime.of(12,  0), LocalTime.of(14,  0) },
-        { LocalTime.of(14, 30), LocalTime.of(16, 30) },
-        { LocalTime.of(17,  0), LocalTime.of(19,  0) },
-        { LocalTime.of(18,  0), LocalTime.of(20,  0) },
-        { LocalTime.of(19,  0), LocalTime.of(21,  0) },
-        { LocalTime.of(20, 30), LocalTime.of(22, 30) },
-    };
+    // Suvalised broneeringute ajad, mis on vahemikus 2-3 tundi
+    private static final LocalTime[][] TIME_SLOTS;
+
+    static {
+        TIME_SLOTS = new LocalTime[][]{
+                {LocalTime.of(11, 30), LocalTime.of(13, 30)},
+                {LocalTime.of(11, 30), LocalTime.of(14, 0)},
+                {LocalTime.of(12, 0), LocalTime.of(14, 30)},
+                {LocalTime.of(13, 0), LocalTime.of(15, 0)},
+                {LocalTime.of(14, 30), LocalTime.of(16, 30)},
+                {LocalTime.of(16, 0), LocalTime.of(18, 0)},
+                {LocalTime.of(17, 0), LocalTime.of(19, 30)},
+                {LocalTime.of(17, 30), LocalTime.of(20, 30)},
+                {LocalTime.of(18, 0), LocalTime.of(21, 0)},
+                {LocalTime.of(19, 0), LocalTime.of(21, 30)},
+                {LocalTime.of(20, 0), LocalTime.of(22, 0)},
+                {LocalTime.of(20, 30), LocalTime.of(23, 0)},
+        };
+    }
 
     // Genereerib juhuslikud broneeringud kõigile laudadele ajavahemikus eile kuni 6 päeva pärast.
-    // Fikseeritud seemnega (42) tagab, et iga käivituse tulemus on sama.
+    // Fikseeritud seemnega (42) tagab, et iga käivituse tulemus on sama. Küsitud abi Claude Code käest
     private List<Broneering> generateRandomBookings(List<RestoraniLaud> lauad) {
         Random rng = new Random(42); // fikseeritud seeme → taasesitatav saali plaan
         List<Broneering> broneeringud = new ArrayList<>();
