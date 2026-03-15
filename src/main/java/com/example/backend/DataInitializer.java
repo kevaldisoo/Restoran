@@ -83,12 +83,12 @@ public class DataInitializer implements CommandLineRunner {
                 .build();
     }
 
-    // ── Random bookings ──────────────────────────────────────────────────────
+    // ── Suvalised broneeringud ──────────────────────────────────────────────────────
 
     private static final String[] NAMES = {
-        "Smith", "Johnson", "Williams", "Brown", "Jones", "Garcia",
-        "Miller", "Davis", "Wilson", "Anderson", "Taylor", "Thomas",
-        "Jackson", "White", "Harris", "Martin", "Thompson", "Moore"
+        "Tamm", "Mägi", "Ivanov", "Puu", "Kask", "Saar",
+        "Miller", "Rohi", "Sirge", "Anderson", "Mitt", "Maja",
+        "Valge", "Roos", "Lips", "Kala", "Lind", "Karis"
     };
 
     private static final LocalTime[][] TIME_SLOTS = {
@@ -101,28 +101,34 @@ public class DataInitializer implements CommandLineRunner {
         { LocalTime.of(20, 30), LocalTime.of(22, 30) },
     };
 
+    // Genereerib juhuslikud broneeringud kõigile laudadele ajavahemikus eile kuni 6 päeva pärast.
+    // Fikseeritud seemnega (42) tagab, et iga käivituse tulemus on sama.
     private List<Broneering> generateRandomBookings(List<RestoraniLaud> lauad) {
-        Random rng = new Random(42); // fixed seed → reproducible hall plan
+        Random rng = new Random(42); // fikseeritud seeme → taasesitatav saali plaan
         List<Broneering> broneeringud = new ArrayList<>();
         LocalDate tana = LocalDate.now();
 
+        // Itereeri üle 8 päeva: eile (-1) kuni 6 päeva pärast
         for (int dayOffset = -1; dayOffset <= 6; dayOffset++) {
             LocalDate date = tana.plusDays(dayOffset);
 
+            // Iga laua jaoks proovi iga ajavahemikku
             for (RestoraniLaud laud : lauad) {
                 for (LocalTime[] slot : TIME_SLOTS) {
-                    if (rng.nextDouble() > 0.30) continue; // ~30 % booking probability
+                    // Jäta ~70% aegadest broneerimata
+                    if (rng.nextDouble() > 0.30) continue;
 
                     LocalDateTime algus = LocalDateTime.of(date, slot[0]);
                     LocalDateTime lopp   = LocalDateTime.of(date, slot[1]);
 
-                    // Skip if a booking for this table already covers this window
+                    // Jäta vahele, kui sellel laual on juba kattuv broneering
                     boolean konflikt = broneeringud.stream().anyMatch(b ->
                             b.getLaud() == laud
                             && b.getAlgusAeg().isBefore(lopp)
                             && b.getLoppAeg().isAfter(algus));
                     if (konflikt) continue;
 
+                    // Külaliste arv vahemikus 1 kuni mahutavus
                     int kylalisteArv = Math.max(1, rng.nextInt(laud.getMahutavus()) + 1);
                     broneeringud.add(Broneering.builder()
                             .laud(laud)

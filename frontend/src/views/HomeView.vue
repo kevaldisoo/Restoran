@@ -13,7 +13,7 @@
       <div class="divider" />
 
       <BookingResults
-        :recommendations="tableStore.soovitused"
+        :soovitused="tableStore.soovitused"
         :selected-id="selectedTableId"
         :searched="tableStore.searched"
         @select="selectedTableId = $event"

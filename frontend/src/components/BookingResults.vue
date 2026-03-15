@@ -26,7 +26,7 @@
           @click="emit('select', rec.id === selectedId ? null : rec.id)"
         >
           <div class="card-header">
-            <span class="laua-num">{{ rec.lauaId }}</span>
+            <span class="laua-num">{{ rec.lauaNumber }}</span>
             <span v-if="idx === 0" class="badge badge-top">⭐ Parim laud</span>
             <span class="badge badge-score">Skoor {{ rec.skoor }}</span>
           </div>
@@ -34,8 +34,8 @@
           <div class="card-body">
             <span class="tag">{{ tsoonLabel(rec.tsoon) }}</span>
             <span class="tag">Kuni {{ rec.mahutavus }} külalist</span>
-            <span v-if="rec.eelistabAknaAll" class="tag">Akna all</span>
-            <span v-if="rec.eelistabLastenurka" class="tag">Laste mängunurga lähedal</span>
+            <span v-if="rec.aknaAll" class="tag">Akna all</span>
+            <span v-if="rec.lastenurk" class="tag">Laste mängunurga lähedal</span>
           </div>
 
           <button
@@ -62,7 +62,7 @@ const props = defineProps({
 const emit = defineEmits(['select', 'book'])
 
 const available = computed(() =>
-  props.soovitused.filter((r) => r.available && r.meetsFilter),
+  props.soovitused.filter((r) => r.vaba && r.meetsFilter),
 )
 
 const TSOON_LABELS = {
