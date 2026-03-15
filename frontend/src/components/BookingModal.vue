@@ -152,7 +152,9 @@ function confirm() {
   border-radius: 4px;
 }
 
-.close-btn:hover { background: #f3f4f6; }
+.close-btn:hover {
+  background: #f3f4f6;
+}
 
 .modal-title {
   font-size: 1.15rem;
@@ -178,8 +180,13 @@ function confirm() {
   font-size: 0.875rem;
 }
 
-.summary-label { color: #6b7280; }
-.summary-value { font-weight: 600; color: #1f2937; }
+.summary-label {
+  color: #6b7280;
+}
+.summary-value {
+  font-weight: 600;
+  color: #1f2937;
+}
 
 .field {
   display: flex;
@@ -235,7 +242,9 @@ function confirm() {
   color: #374151;
 }
 
-.btn-cancel:hover { background: #f3f4f6; }
+.btn-cancel:hover {
+  background: #f3f4f6;
+}
 
 .btn-confirm {
   padding: 9px 18px;
@@ -249,6 +258,11 @@ function confirm() {
   transition: background 0.15s;
 }
 
-.btn-confirm:hover:not(:disabled) { background: #b45309; }
-.btn-confirm:disabled { opacity: 0.6; cursor: not-allowed; }
+.btn-confirm:hover:not(:disabled) {
+  background: #b45309;
+}
+.btn-confirm:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
 </style>

@@ -12,7 +12,10 @@
         {{ available.length }} laud{{ available.length !== 1 ? 'a' : '' }} vaba
       </h3>
 
-      <div v-if="available.length === 0 && kombineeritudSoovitused.length === 0" class="empty-state">
+      <div
+        v-if="available.length === 0 && kombineeritudSoovitused.length === 0"
+        class="empty-state"
+      >
         <span class="empty-icon">😔</span>
         <p>Ükski laud ei vasta sinu kriteeriumitele. Muuda filtreid.</p>
       </div>
@@ -38,17 +41,12 @@
             <span v-if="rec.lastenurk" class="tag">Laste mängunurga lähedal</span>
           </div>
 
-          <button
-            class="btn-book"
-            @click.stop="emit('book', rec)"
-          >
-            Broneeri see laud
-          </button>
+          <button class="btn-book" @click.stop="emit('book', rec)">Broneeri see laud</button>
         </li>
       </ul>
 
       <template v-if="kombineeritudSoovitused.length > 0">
-        <h3 class="results-title" style="margin-top: 16px;">Kombineeritud laudade soovitused</h3>
+        <h3 class="results-title" style="margin-top: 16px">Kombineeritud laudade soovitused</h3>
         <ul class="table-list">
           <li
             v-for="pair in kombineeritudSoovitused"
@@ -56,16 +54,22 @@
             class="table-card"
           >
             <div class="card-header">
-              <span class="laua-num">{{ pair.laud1.lauaNumber }} + {{ pair.laud2.lauaNumber }}</span>
+              <span class="laua-num"
+                >{{ pair.laud1.lauaNumber }} + {{ pair.laud2.lauaNumber }}</span
+              >
               <span class="badge badge-score">Skoor {{ pair.skoor }}</span>
             </div>
             <div class="card-body">
               <span class="tag">{{ tsoonLabel(pair.laud1.tsoon) }}</span>
               <span class="tag">Kuni {{ pair.kombineeritudMahutavus }} külalist</span>
               <span v-if="pair.laud1.aknaAll || pair.laud2.aknaAll" class="tag">Akna all</span>
-              <span v-if="pair.laud1.lastenurk || pair.laud2.lastenurk" class="tag">Laste mängunurga lähedal</span>
+              <span v-if="pair.laud1.lastenurk || pair.laud2.lastenurk" class="tag"
+                >Laste mängunurga lähedal</span
+              >
             </div>
-            <button class="btn-book" @click="emit('book-combined', pair)">Broneeri mõlemad lauad</button>
+            <button class="btn-book" @click="emit('book-combined', pair)">
+              Broneeri mõlemad lauad
+            </button>
           </li>
         </ul>
       </template>
@@ -85,9 +89,7 @@ const props = defineProps({
 
 const emit = defineEmits(['select', 'book', 'book-combined'])
 
-const available = computed(() =>
-  props.soovitused.filter((r) => r.vaba && r.meetsFilter),
-)
+const available = computed(() => props.soovitused.filter((r) => r.vaba && r.meetsFilter))
 
 const TSOON_LABELS = {
   SISESAAL: 'Sisesaal',
@@ -143,7 +145,9 @@ function tsoonLabel(tsoon) {
   border-radius: 8px;
   padding: 12px;
   cursor: pointer;
-  transition: border-color 0.15s, box-shadow 0.15s;
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
   background: #fff;
 }
 

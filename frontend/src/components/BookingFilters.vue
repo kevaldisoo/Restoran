@@ -65,20 +65,12 @@
       {{ loading ? 'Otsin…' : 'Otsi laudu' }}
     </button>
 
-    <button v-if="searched" type="button" class="btn-secondary" @click="clear">
-      Puhasta
-    </button>
+    <button v-if="searched" type="button" class="btn-secondary" @click="clear">Puhasta</button>
   </form>
 </template>
 
 <script setup>
-import { reactive, computed } from 'vue'
-
-const props = defineProps({
-  loading: Boolean,
-  error: String,
-  searched: Boolean,
-})
+import { reactive } from 'vue'
 
 const emit = defineEmits(['search', 'clear'])
 

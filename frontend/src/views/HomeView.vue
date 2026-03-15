@@ -23,9 +23,9 @@
       />
     </aside>
 
-    <!-- ── Main: hall plan ─────────────────────────────────────────────── -->
+    <!-- ── Saaliplaan ─────────────────────────────────────────────── -->
     <main class="main">
-      <h1 class="page-title">Restaurant Table Booking</h1>
+      <h1 class="page-title">Restorani laudade broneerimine</h1>
 
       <div v-if="tableStore.loading" class="loading-bar">Loading…</div>
 
@@ -39,13 +39,15 @@
       />
 
       <p v-if="selectedTable" class="selection-hint">
-        Selected: <strong>{{ selectedTable.lauaNumber }}</strong>
-        ({{ selectedTable.mahutavus }} guests, {{ zoneLabel(selectedTable.tsoon) }})
+        Selected: <strong>{{ selectedTable.lauaNumber }}</strong> ({{
+          selectedTable.mahutavus
+        }}
+        guests, {{ zoneLabel(selectedTable.tsoon) }})
         <button class="inline-book-btn" @click="openModal(selectedTable)">Book →</button>
       </p>
     </main>
 
-    <!-- ── Booking modal ───────────────────────────────────────────────── -->
+    <!-- ── Broneerimise vaheleht ───────────────────────────────────────────────── -->
     <BookingModal
       :show="showModal"
       :laud="modalTable"
@@ -72,15 +74,15 @@ import BookingModal from '@/components/BookingModal.vue'
 import { useTableStore } from '@/stores/tableStore.js'
 import { useBookingStore } from '@/stores/bookingStore.js'
 
-const tableStore  = useTableStore()
+const tableStore = useTableStore()
 const bookingStore = useBookingStore()
 
 const selectedTableId = ref(null)
-const showModal   = ref(false)
-const modalTable  = ref(null)
-const modalLaud2  = ref(null)
-const lastFilter  = ref(null)
-const toast       = ref('')
+const showModal = ref(false)
+const modalTable = ref(null)
+const modalLaud2 = ref(null)
+const lastFilter = ref(null)
+const toast = ref('')
 
 onMounted(() => tableStore.fetchLauad())
 
@@ -90,7 +92,9 @@ const selectedTable = computed(() => {
 })
 
 const ZONE_LABELS = { SISESAAL: 'Sisesaal', TERRASS: 'Terrass', PRIVAATRUUM: 'Privaatruum' }
-function zoneLabel(zone) { return ZONE_LABELS[zone] ?? zone }
+function zoneLabel(zone) {
+  return ZONE_LABELS[zone] ?? zone
+}
 
 async function onSearch(filter) {
   lastFilter.value = filter
@@ -104,7 +108,9 @@ function onClear() {
   selectedTableId.value = null
 }
 
-function onHallSelect(id) { selectedTableId.value = id }
+function onHallSelect(id) {
+  selectedTableId.value = id
+}
 
 function openModal(rec) {
   modalTable.value = rec
@@ -128,21 +134,21 @@ async function onConfirmBooking({ kylaline, kommentaar }) {
   const f = lastFilter.value
   try {
     await bookingStore.createBroneering({
-      lauaId:        modalTable.value.id,
-      kylastaja:     kylaline,
-      kylalisteArv:  f.kylalisteArv,
-      algusAeg:      `${f.kuupaev}T${f.algusAeg}:00`,
-      loppAeg:       `${f.kuupaev}T${f.loppAeg}:00`,
+      lauaId: modalTable.value.id,
+      kylastaja: kylaline,
+      kylalisteArv: f.kylalisteArv,
+      algusAeg: `${f.kuupaev}T${f.algusAeg}:00`,
+      loppAeg: `${f.kuupaev}T${f.loppAeg}:00`,
       kommentaar,
       kombineeritud: !!modalLaud2.value,
     })
     if (modalLaud2.value) {
       await bookingStore.createBroneering({
-        lauaId:        modalLaud2.value.id,
-        kylastaja:     kylaline,
-        kylalisteArv:  f.kylalisteArv,
-        algusAeg:      `${f.kuupaev}T${f.algusAeg}:00`,
-        loppAeg:       `${f.kuupaev}T${f.loppAeg}:00`,
+        lauaId: modalLaud2.value.id,
+        kylastaja: kylaline,
+        kylalisteArv: f.kylalisteArv,
+        algusAeg: `${f.kuupaev}T${f.algusAeg}:00`,
+        loppAeg: `${f.kuupaev}T${f.loppAeg}:00`,
         kommentaar,
         kombineeritud: true,
       })
@@ -162,7 +168,9 @@ async function onConfirmBooking({ kylaline, kommentaar }) {
 
 function showToast(msg) {
   toast.value = msg
-  setTimeout(() => { toast.value = '' }, 4000)
+  setTimeout(() => {
+    toast.value = ''
+  }, 4000)
 }
 </script>
 
@@ -213,8 +221,13 @@ function showToast(msg) {
 }
 
 @keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50%       { opacity: 0.4; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
+  }
 }
 
 .selection-hint {
@@ -237,7 +250,9 @@ function showToast(msg) {
   cursor: pointer;
 }
 
-.inline-book-btn:hover { background: #b45309; }
+.inline-book-btn:hover {
+  background: #b45309;
+}
 
 .toast {
   position: fixed;
@@ -249,10 +264,19 @@ function showToast(msg) {
   border-radius: 8px;
   font-size: 0.9rem;
   font-weight: 500;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
   z-index: 200;
 }
 
-.toast-enter-active, .toast-leave-active { transition: opacity .3s, transform .3s; }
-.toast-enter-from, .toast-leave-to { opacity: 0; transform: translateY(12px); }
+.toast-enter-active,
+.toast-leave-active {
+  transition:
+    opacity 0.3s,
+    transform 0.3s;
+}
+.toast-enter-from,
+.toast-leave-to {
+  opacity: 0;
+  transform: translateY(12px);
+}
 </style>

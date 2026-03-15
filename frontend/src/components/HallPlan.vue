@@ -52,16 +52,16 @@
           :class="{ clickable: isClickable(laud), selected: laud.id === selectedId }"
           @click="handleClick(laud)"
         />
-        <text
-          :x="laud.posX + laud.width / 2"
-          :y="laud.posY + laud.height / 2 - 5"
-          class="laud-num"
-        >{{ laud.lauaNumber }}</text>
+        <text :x="laud.posX + laud.width / 2" :y="laud.posY + laud.height / 2 - 5" class="laud-num">
+          {{ laud.lauaNumber }}
+        </text>
         <text
           :x="laud.posX + laud.width / 2"
           :y="laud.posY + laud.height / 2 + 10"
           class="laud-cap"
-        >{{ laud.mahutavus }}p</text>
+        >
+          {{ laud.mahutavus }}p
+        </text>
 
         <!-- Lastenurga märk -->
         <text
@@ -70,7 +70,9 @@
           :y="laud.posY + 12"
           class="icon-text"
           title="Lastenurk"
-        >🕹️</text>
+        >
+          🕹️
+        </text>
 
         <!-- Akna märk -->
         <text
@@ -79,7 +81,9 @@
           :y="laud.posY + 12"
           class="icon-text"
           title="Window view"
-        >🪟</text>
+        >
+          🪟
+        </text>
       </g>
     </svg>
   </div>
@@ -139,12 +143,12 @@ function laudColor(laud) {
   const rec = props.recommendationMap[laud.id]
   if (!rec) return '#94a3b8'
 
-  if (!rec.vaba) return '#f87171'        // punane - broneeritud
+  if (!rec.vaba) return '#f87171' // punane - broneeritud
   if (!rec.meetsFilter) return '#d1d5db' // hall - ei vasta filtritele
 
   // Kui on vaba, siis on laud roheline, va parim valik, mis on kollane
   if (rec.skoor === topSkoor.value) return '#facc15' // kollane - parim valik
-  return '#4ade80'                                    // roheline - vaba
+  return '#4ade80' // roheline - vaba
 }
 
 function isClickable(laud) {
@@ -179,9 +183,18 @@ function handleClick(laud) {
   stroke-width: 1.5;
 }
 
-.inside-zone  { fill: #fde68a; stroke: #d97706; }
-.terrace-zone { fill: #a7f3d0; stroke: #059669; }
-.private-zone { fill: #ddd6fe; stroke: #7c3aed; }
+.inside-zone {
+  fill: #fde68a;
+  stroke: #d97706;
+}
+.terrace-zone {
+  fill: #a7f3d0;
+  stroke: #059669;
+}
+.private-zone {
+  fill: #ddd6fe;
+  stroke: #7c3aed;
+}
 
 .zone-label {
   font-size: 13px;

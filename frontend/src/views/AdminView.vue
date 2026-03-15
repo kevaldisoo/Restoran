@@ -66,26 +66,34 @@
             :x="laud.posX + laud.width / 2"
             :y="laud.posY + laud.height / 2 - 5"
             class="tbl-num"
-          >{{ laud.lauaNumber }}</text>
+          >
+            {{ laud.lauaNumber }}
+          </text>
           <text
             :x="laud.posX + laud.width / 2"
             :y="laud.posY + laud.height / 2 + 9"
             class="tbl-cap"
-          >{{ laud.mahutavus }}p</text>
+          >
+            {{ laud.mahutavus }}p
+          </text>
           <text
             v-if="laud.aknaAll"
             :x="laud.posX + 2"
             :y="laud.posY + 12"
             class="icon-text"
             title="Akna all"
-          >🪟</text>
+          >
+            🪟
+          </text>
           <text
             v-if="laud.lastenurk"
             :x="laud.posX + laud.width - 10"
             :y="laud.posY + 12"
             class="icon-text"
             title="Lastenurga lähedal"
-          >🕹️</text>
+          >
+            🕹️
+          </text>
         </g>
       </svg>
     </div>
@@ -96,20 +104,20 @@
 import { ref, computed, onMounted } from 'vue'
 import { api } from '@/api/index.js'
 
-const svgEl    = ref(null)
-const lauad    = ref([])
+const svgEl = ref(null)
+const lauad = ref([])
 const originals = ref([])
-const dragging  = ref(null)
+const dragging = ref(null)
 const dragOffset = ref({ x: 0, y: 0 })
-const dirty     = ref(false)
-const saving    = ref(false)
+const dirty = ref(false)
+const saving = ref(false)
 const loadError = ref('')
 
 onMounted(async () => {
   try {
     const data = await api.getLauad()
-    lauad.value    = data.map(l => ({ ...l }))
-    originals.value = data.map(l => ({ ...l }))
+    lauad.value = data.map((l) => ({ ...l }))
+    originals.value = data.map((l) => ({ ...l }))
   } catch (e) {
     loadError.value = 'Laudade laadimine ebaõnnestus: ' + e.message
   }
@@ -165,20 +173,20 @@ function svgPoint(event) {
 
 function startDrag(laud, event) {
   const pt = svgPoint(event)
-  dragging.value   = laud
+  dragging.value = laud
   dragOffset.value = { x: pt.x - laud.posX, y: pt.y - laud.posY }
 }
 
 function onMouseMove(event) {
   if (!dragging.value) return
-  const pt   = svgPoint(event)
-  const laud = lauad.value.find(l => l.id === dragging.value.id)
+  const pt = svgPoint(event)
+  const laud = lauad.value.find((l) => l.id === dragging.value.id)
   if (!laud) return
-  laud.posX     = Math.round(pt.x - dragOffset.value.x)
-  laud.posY     = Math.round(pt.y - dragOffset.value.y)
-  laud.aknaAll  = computeAknaAll(laud)
+  laud.posX = Math.round(pt.x - dragOffset.value.x)
+  laud.posY = Math.round(pt.y - dragOffset.value.y)
+  laud.aknaAll = computeAknaAll(laud)
   laud.lastenurk = computeLastenurk(laud)
-  dirty.value   = true
+  dirty.value = true
 }
 
 function onMouseUp() {
@@ -190,14 +198,14 @@ function onMouseUp() {
 async function save() {
   saving.value = true
   try {
-    const changed = lauad.value.filter(l => {
-      const orig = originals.value.find(o => o.id === l.id)
+    const changed = lauad.value.filter((l) => {
+      const orig = originals.value.find((o) => o.id === l.id)
       return orig && (orig.posX !== l.posX || orig.posY !== l.posY)
     })
     for (const l of changed) {
       await api.updateLauaPositsioon(l.id, { posX: l.posX, posY: l.posY })
     }
-    originals.value = lauad.value.map(l => ({ ...l }))
+    originals.value = lauad.value.map((l) => ({ ...l }))
     dirty.value = false
   } finally {
     saving.value = false
@@ -205,7 +213,7 @@ async function save() {
 }
 
 function reset() {
-  lauad.value = originals.value.map(l => ({ ...l }))
+  lauad.value = originals.value.map((l) => ({ ...l }))
   dirty.value = false
 }
 </script>
@@ -248,7 +256,9 @@ function reset() {
   font-weight: 600;
 }
 
-.btn-save, .btn-reset, .btn-back {
+.btn-save,
+.btn-reset,
+.btn-back {
   padding: 8px 16px;
   border-radius: 6px;
   font-size: 0.9rem;
@@ -263,15 +273,22 @@ function reset() {
   color: #fff;
   transition: background 0.15s;
 }
-.btn-save:hover:not(:disabled) { background: #b45309; }
-.btn-save:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn-save:hover:not(:disabled) {
+  background: #b45309;
+}
+.btn-save:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
 
 .btn-reset {
   background: transparent;
   border: 1px solid #d1d5db;
   color: #374151;
 }
-.btn-reset:hover { background: #f3f4f6; }
+.btn-reset:hover {
+  background: #f3f4f6;
+}
 
 .btn-back {
   background: transparent;
@@ -280,7 +297,9 @@ function reset() {
   display: inline-flex;
   align-items: center;
 }
-.btn-back:hover { background: #f3f4f6; }
+.btn-back:hover {
+  background: #f3f4f6;
+}
 
 .load-error {
   color: #dc2626;
@@ -306,9 +325,18 @@ function reset() {
   fill-opacity: 0.35;
   stroke-width: 1.5;
 }
-.inside-zone  { fill: #fde68a; stroke: #d97706; }
-.terrace-zone { fill: #a7f3d0; stroke: #059669; }
-.private-zone { fill: #ddd6fe; stroke: #7c3aed; }
+.inside-zone {
+  fill: #fde68a;
+  stroke: #d97706;
+}
+.terrace-zone {
+  fill: #a7f3d0;
+  stroke: #059669;
+}
+.private-zone {
+  fill: #ddd6fe;
+  stroke: #7c3aed;
+}
 
 .zone-label {
   font-size: 13px;
