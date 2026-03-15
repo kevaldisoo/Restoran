@@ -32,19 +32,19 @@ public class BroneeringService {
     }
 
     /**
-     * Restoran on avatud kella 11 ja 23 vahel
+     * Restoran on avatud kella 11 ja 23 vahel, broneeringu loomise funktsioon
      */
-    public BroneeringDTO createBooking(BroneeringCreateRequest req) {
+    public BroneeringDTO looBroneering(BroneeringCreateRequest req) {
         LocalTime algusKell = req.getAlgusAeg().toLocalTime();
         LocalTime loppKell  = req.getLoppAeg().toLocalTime();
-        if (algusKell.isBefore(AVAMISE_AEG) || loppKell.isAfter(SULGEMISE_AEG)) {
+        if (algusKell.isBefore(AVAMISE_AEG) || loppKell.isAfter(SULGEMISE_AEG)) { // Kui broneering on enne avamist või lõppeb pärast sulgemist
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     "Restoran on avatud 11:00–23:00");
         }
 
-        RestoraniLaud laud = restoraniLaudRepository.findById(req.getLauaId())
+        RestoraniLaud laud = restoraniLaudRepository.findById(req.getLauaId()) // Kui lauda ei ole
                 .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND, "Table not found: " + req.getLauaId()));
+                        HttpStatus.NOT_FOUND, "Lauda ei leitud: " + req.getLauaId()));
 
         if (!req.isKombineeritud() && laud.getMahutavus() < req.getKylalisteArv()) { // Ei kontrollita juhul, kui lauad on kombineeritud
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
@@ -52,6 +52,9 @@ public class BroneeringService {
                             .formatted(laud.getMahutavus(), req.getKylalisteArv()));
         }
 
+        /*
+        Juhul, kui laud on juba broneeritud. Ei tohiks küll võimalik olla ka frontendis seda teha, kuid igaks juhuks lisakontroll
+         */
         List<Broneering> konflikt = broneeringRepository.findConflictingBookings(
                 req.getLauaId(), req.getAlgusAeg(), req.getLoppAeg());
         if (!konflikt.isEmpty()) {
@@ -72,7 +75,10 @@ public class BroneeringService {
         return BroneeringDTO.from(broneeringRepository.save(broneering));
     }
 
-    public BroneeringDTO cancelBooking(Long id) {
+    /*
+    Funktsiooni tegelikult ajapuuduse tõttu frontendis ei kasutata.
+     */
+    public BroneeringDTO cancelBroneering(Long id) {
         Broneering broneering = broneeringRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND, "Booking not found: " + id));

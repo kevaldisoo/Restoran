@@ -70,6 +70,7 @@ public class LauaController {
         return ResponseEntity.ok().build();
     }
 
+    // Filtritest saadud andmed
     private BroneeringFilterRequest buildFilter(LocalDate kuupaev, LocalTime algusAeg, LocalTime loppAeg,
                                                 int kylalised, TsooniTyyp tsoon,
                                                 Boolean aknaAll, Boolean lastenurk, Boolean privaatsus) {

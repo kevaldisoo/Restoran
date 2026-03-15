@@ -15,7 +15,7 @@ public class BroneeringDTO {
     private int kylalisteArv;
     private LocalDateTime algusAeg;
     private LocalDateTime loppAeg;
-    private BroneeringuStaatus staatus;
+    private BroneeringuStaatus staatus; // Kas on kinnitatud või tühistatud staatus
     private String kommentaar;
 
     public static BroneeringDTO from(Broneering b) {

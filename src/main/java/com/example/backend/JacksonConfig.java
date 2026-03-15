@@ -1,3 +1,4 @@
+// Abifunktsioon kuupäevade korrektselt kuvamiseks
 package com.example.backend;
 
 import org.springframework.context.annotation.Bean;

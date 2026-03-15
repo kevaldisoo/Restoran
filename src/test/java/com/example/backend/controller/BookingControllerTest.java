@@ -33,30 +33,30 @@ class BookingControllerTest {
     }
 
     @Test
-    void getAllBookings_returnsNonNullList() {
+    void getAllBroneeringud_tagastabNonNull() {
         List<BroneeringDTO> result = broneeringService.getAllBookings();
         assertThat(result).isNotNull();
     }
 
     @Test
-    void createBooking_validRequest_returnsConfirmedBooking() {
-        BroneeringDTO result = broneeringService.createBooking(validRequest(1L));
+    void looBroneering_validRequest_kontrolliKasKinnitatud() {
+        BroneeringDTO result = broneeringService.looBroneering(validRequest(1L));
         assertThat(result.getId()).isNotNull();
         assertThat(result.getKylaline()).isEqualTo("Jüri Mägi");
         assertThat(result.getStaatus()).isEqualTo(BroneeringuStaatus.CONFIRMED);
     }
 
     @Test
-    void createBooking_conflictingTime_throwsConflict() {
-        broneeringService.createBooking(validRequest(2L));
+    void looBroneering_kattuvAeg_toobEsileKonflikti() {
+        broneeringService.looBroneering(validRequest(2L));
 
-        assertThatThrownBy(() -> broneeringService.createBooking(validRequest(2L)))
+        assertThatThrownBy(() -> broneeringService.looBroneering(validRequest(2L)))
                 .isInstanceOf(ResponseStatusException.class)
                 .satisfies(ex -> assertThat(((ResponseStatusException) ex).getStatusCode().value()).isEqualTo(409));
     }
 
     @Test
-    void createBooking_partySizeExceedsCapacity_throwsBadRequest() {
+    void looBroneering_kylalisteArvYleMahutavuse_poleLubatud() {
         BroneeringCreateRequest req = new BroneeringCreateRequest();
         req.setLauaId(1L);
         req.setKylastaja("Suur grupp");
@@ -65,13 +65,13 @@ class BookingControllerTest {
         req.setLoppAeg(LocalDateTime.of(2026, 3, 20, 14, 0));
         req.setKommentaar("");
 
-        assertThatThrownBy(() -> broneeringService.createBooking(req))
+        assertThatThrownBy(() -> broneeringService.looBroneering(req))
                 .isInstanceOf(ResponseStatusException.class)
                 .satisfies(ex -> assertThat(((ResponseStatusException) ex).getStatusCode().value()).isEqualTo(409));
     }
 
     @Test
-    void createBooking_tableNotFound_throwsNotFound() {
+    void looBroneering_laudaPole_viskabNotFound() {
         BroneeringCreateRequest req = new BroneeringCreateRequest();
         req.setLauaId(9999L);
         req.setKylastaja("m");
@@ -80,7 +80,7 @@ class BookingControllerTest {
         req.setLoppAeg(LocalDateTime.of(2026, 9, 3, 21, 0));
         req.setKommentaar("");
 
-        assertThatThrownBy(() -> broneeringService.createBooking(req))
+        assertThatThrownBy(() -> broneeringService.looBroneering(req))
                 .isInstanceOf(ResponseStatusException.class)
                 .satisfies(ex -> assertThat(((ResponseStatusException) ex).getStatusCode().value()).isEqualTo(404));
     }

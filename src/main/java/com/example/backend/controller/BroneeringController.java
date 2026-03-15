@@ -27,12 +27,12 @@ public class BroneeringController {
     // Broneeringu lisamine
     @PostMapping
     public ResponseEntity<BroneeringDTO> createBooking(@RequestBody BroneeringCreateRequest req) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(broneeringService.createBooking(req));
+        return ResponseEntity.status(HttpStatus.CREATED).body(broneeringService.looBroneering(req));
     }
 
     // Eemalda broneering
     @DeleteMapping("/{id}")
     public ResponseEntity<BroneeringDTO> cancelBooking(@PathVariable Long id) {
-        return ResponseEntity.ok(broneeringService.cancelBooking(id));
+        return ResponseEntity.ok(broneeringService.cancelBroneering(id));
     }
 }

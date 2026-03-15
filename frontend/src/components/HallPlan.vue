@@ -9,7 +9,7 @@
       role="img"
       aria-label="Restaurant hall plan"
     >
-      <!-- ── Zone backgrounds ─────────────────────────────────────────────── -->
+      <!-- ── Tsooni taustad ─────────────────────────────────────────────── -->
       <rect x="10" y="10" width="545" height="420" rx="6" class="zone inside-zone" />
       <text x="282" y="32" class="zone-label">Sisesaal</text>
 

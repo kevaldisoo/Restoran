@@ -1,7 +1,6 @@
 package com.example.backend.repository;
 
 import com.example.backend.model.Broneering;
-import com.example.backend.model.BroneeringuStaatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -36,6 +35,4 @@ public interface BroneeringRepository extends JpaRepository<Broneering, Long> {
             @Param("lauaId") Long lauaId,
             @Param("algusAeg") LocalDateTime algusAeg,
             @Param("loppAeg") LocalDateTime loppAeg);
-
-    List<Broneering> findByStaatus(BroneeringuStaatus staatus);
 }

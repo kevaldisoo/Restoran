@@ -111,15 +111,15 @@ public class DataInitializer implements CommandLineRunner {
         };
     }
 
-    // Genereerib juhuslikud broneeringud kõigile laudadele ajavahemikus eile kuni 6 päeva pärast.
+    // Genereerib juhuslikud broneeringud kõigile laudadele ajavahemikus täna kuni 6 päeva pärast.
     // Fikseeritud seemnega (42) tagab, et iga käivituse tulemus on sama. Küsitud abi Claude Code käest
     private List<Broneering> generateRandomBookings(List<RestoraniLaud> lauad) {
         Random rng = new Random(42); // fikseeritud seeme → taasesitatav saali plaan
         List<Broneering> broneeringud = new ArrayList<>();
         LocalDate tana = LocalDate.now();
 
-        // Itereeri üle 8 päeva: eile (-1) kuni 6 päeva pärast
-        for (int dayOffset = -1; dayOffset <= 6; dayOffset++) {
+        // Itereeri üle 7 päeva: täna (0) kuni 6 päeva pärast
+        for (int dayOffset = 0; dayOffset <= 6; dayOffset++) {
             LocalDate date = tana.plusDays(dayOffset);
 
             // Iga laua jaoks proovi iga ajavahemikku

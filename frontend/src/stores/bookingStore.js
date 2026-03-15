@@ -9,18 +9,6 @@ export const useBookingStore = defineStore('broneeringud', {
   }),
 
   actions: {
-    async fetchBroneeringud() {
-      this.loading = true
-      this.error = null
-      try {
-        this.broneeringud = await api.getBroneeringud()
-      } catch (e) {
-        this.error = e.message
-      } finally {
-        this.loading = false
-      }
-    },
-
     async createBroneering(data) {
       this.loading = true
       this.error = null

@@ -1,6 +1,8 @@
+<!-- Esialgne disain Claude Codega, pärast muudetud -->
+
 <template>
   <div class="page">
-    <!-- ── Sidebar ──────────────────────────────────────────────────────── -->
+    <!-- ── Külg ──────────────────────────────────────────────────────── -->
     <aside class="sidebar">
       <BookingFilters
         :loading="tableStore.loading"
@@ -15,9 +17,9 @@
       <BookingResults
         :soovitused="tableStore.soovitused"
         :kombineeritud-soovitused="tableStore.kombineeritudSoovitused"
-        :selected-id="selectedTableId"
+        :selected-id="selectedLaudId"
         :searched="tableStore.searched"
-        @select="selectedTableId = $event"
+        @select="selectedLaudId = $event"
         @book="openModal"
         @book-combined="openModalKombineeritud"
       />
@@ -25,7 +27,7 @@
 
     <!-- ── Saaliplaan ─────────────────────────────────────────────── -->
     <main class="main">
-      <h1 class="page-title">Restorani laudade broneerimine</h1>
+      <h1 class="page-title">Restorani laudade broneerimine. Avatud 11.00 - 23.00</h1>
 
       <div v-if="tableStore.loading" class="loading-bar">Loading…</div>
 
@@ -33,16 +35,16 @@
         :lauad="tableStore.lauad"
         :recommendation-map="tableStore.recommendationMap"
         :kombineeritud-soovitused="tableStore.kombineeritudSoovitused"
-        :selected-id="selectedTableId"
+        :selected-id="selectedLaudId"
         :searched="tableStore.searched"
-        @select="onHallSelect"
+        @select="onAlaSelect"
       />
 
       <p v-if="selectedTable" class="selection-hint">
         Selected: <strong>{{ selectedTable.lauaNumber }}</strong> ({{
           selectedTable.mahutavus
         }}
-        guests, {{ zoneLabel(selectedTable.tsoon) }})
+        guests, {{ tsoonLabel(selectedTable.tsoon) }})
         <button class="inline-book-btn" @click="openModal(selectedTable)">Book →</button>
       </p>
     </main>
@@ -55,10 +57,10 @@
       :loading="bookingStore.loading"
       :error="bookingStore.error"
       @cancel="showModal = false"
-      @confirm="onConfirmBooking"
+      @confirm="onKinnitaBroneering"
     />
 
-    <!-- ── Success toast ───────────────────────────────────────────────── -->
+    <!-- ── Õnnestumise toast ───────────────────────────────────────────────── -->
     <Transition name="toast">
       <div v-if="toast" class="toast">✅ {{ toast }}</div>
     </Transition>
@@ -77,7 +79,7 @@ import { useBookingStore } from '@/stores/bookingStore.js'
 const tableStore = useTableStore()
 const bookingStore = useBookingStore()
 
-const selectedTableId = ref(null)
+const selectedLaudId = ref(null)
 const showModal = ref(false)
 const modalTable = ref(null)
 const modalLaud2 = ref(null)
@@ -87,29 +89,29 @@ const toast = ref('')
 onMounted(() => tableStore.fetchLauad())
 
 const selectedTable = computed(() => {
-  if (!selectedTableId.value) return null
-  return tableStore.recommendationMap[selectedTableId.value] ?? null
+  if (!selectedLaudId.value) return null
+  return tableStore.recommendationMap[selectedLaudId.value] ?? null
 })
 
-const ZONE_LABELS = { SISESAAL: 'Sisesaal', TERRASS: 'Terrass', PRIVAATRUUM: 'Privaatruum' }
-function zoneLabel(zone) {
-  return ZONE_LABELS[zone] ?? zone
+const TSOONI_LABELS = { SISESAAL: 'Sisesaal', TERRASS: 'Terrass', PRIVAATRUUM: 'Privaatruum' }
+function tsoonLabel(tsoon) {
+  return TSOONI_LABELS[tsoon] ?? tsoon
 }
 
 async function onSearch(filter) {
   lastFilter.value = filter
-  selectedTableId.value = null
+  selectedLaudId.value = null
   await tableStore.fetchSoovitused(filter)
   await tableStore.fetchKombineeritudSoovitused(filter)
 }
 
 function onClear() {
   tableStore.clearSoovitused()
-  selectedTableId.value = null
+  selectedLaudId.value = null
 }
 
-function onHallSelect(id) {
-  selectedTableId.value = id
+function onAlaSelect(id) {
+  selectedLaudId.value = id
 }
 
 function openModal(rec) {
@@ -129,7 +131,7 @@ function openModalKombineeritud(pair) {
   showModal.value = true
 }
 
-async function onConfirmBooking({ kylaline, kommentaar }) {
+async function onKinnitaBroneering({ kylaline, kommentaar }) {
   if (!modalTable.value || !lastFilter.value) return
   const f = lastFilter.value
   try {
@@ -154,11 +156,11 @@ async function onConfirmBooking({ kylaline, kommentaar }) {
       })
     }
     const toastMsg = modalLaud2.value
-      ? `Tables ${modalTable.value.lauaNumber} booked for ${kylaline}!`
-      : `Table ${modalTable.value.lauaNumber} booked for ${kylaline}!`
+      ? `Lauad ${modalTable.value.lauaNumber} broneeritud külalisele ${kylaline}!`
+      : `Laud ${modalTable.value.lauaNumber} broneeritud külalisele ${kylaline}!`
     modalLaud2.value = null
     showModal.value = false
-    selectedTableId.value = null
+    selectedLaudId.value = null
     await tableStore.fetchSoovitused(f)
     showToast(toastMsg)
   } catch {
@@ -266,17 +268,5 @@ function showToast(msg) {
   font-weight: 500;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
   z-index: 200;
-}
-
-.toast-enter-active,
-.toast-leave-active {
-  transition:
-    opacity 0.3s,
-    transform 0.3s;
-}
-.toast-enter-from,
-.toast-leave-to {
-  opacity: 0;
-  transform: translateY(12px);
 }
 </style>

@@ -61,7 +61,7 @@ class BroneeringServiceTest {
     }
 
     @Test
-    void createBooking_successfullyCreatesBooking() {
+    void looBroneering() {
         when(laudRepository.findById(1L)).thenReturn(Optional.of(laud));
         when(broneeringRepository.findConflictingBookings(any(), any(), any())).thenReturn(List.of());
         Broneering saved = Broneering.builder()
@@ -71,7 +71,7 @@ class BroneeringServiceTest {
                 .build();
         when(broneeringRepository.save(any(Broneering.class))).thenReturn(saved);
 
-        BroneeringDTO result = broneeringService.createBooking(validRequest);
+        BroneeringDTO result = broneeringService.looBroneering(validRequest);
 
         assertThat(result.getId()).isEqualTo(10L);
         assertThat(result.getLauaNumber()).isEqualTo("T01");
@@ -81,27 +81,27 @@ class BroneeringServiceTest {
     }
 
     @Test
-    void createBooking_throwsNotFoundWhenTableMissing() {
+    void looBroneering_throwsNotFoundKuiLaudaPole() {
         when(laudRepository.findById(99L)).thenReturn(Optional.empty());
         validRequest.setLauaId(99L);
 
-        assertThatThrownBy(() -> broneeringService.createBooking(validRequest))
+        assertThatThrownBy(() -> broneeringService.looBroneering(validRequest))
                 .isInstanceOf(ResponseStatusException.class)
                 .hasMessageContaining("Table not found");
     }
 
     @Test
-    void createBooking_throwsBadRequestWhenPartySizeExceedsCapacity() {
+    void looBroneering_throwsBadRequestKuiKylalisteArvYletabMahutavust() {
         when(laudRepository.findById(1L)).thenReturn(Optional.of(laud));
         validRequest.setKylalisteArv(30);
 
-        assertThatThrownBy(() -> broneeringService.createBooking(validRequest))
+        assertThatThrownBy(() -> broneeringService.looBroneering(validRequest))
                 .isInstanceOf(ResponseStatusException.class)
                 .hasMessageContaining("mahutavus");
     }
 
     @Test
-    void createBooking_throwsConflictWhenTimeSlotTaken() {
+    void looBroneering_throwsKonfliktKuiAegVoetud() {
         Broneering conflicting = Broneering.builder()
                 .id(5L).laud(laud).staatus(BroneeringuStaatus.CONFIRMED)
                 .algusAeg(start.minusHours(1)).loppAeg(end.minusHours(1)).build();
@@ -110,13 +110,13 @@ class BroneeringServiceTest {
         when(broneeringRepository.findConflictingBookings(any(), any(), any()))
                 .thenReturn(List.of(conflicting));
 
-        assertThatThrownBy(() -> broneeringService.createBooking(validRequest))
+        assertThatThrownBy(() -> broneeringService.looBroneering(validRequest))
                 .isInstanceOf(ResponseStatusException.class)
                 .hasMessageContaining("juba broneeritud");
     }
 
     @Test
-    void cancelBooking_setsStatusToCancelled() {
+    void cancelBroneering_muudabStaatuseCancelled() {
         Broneering booking = Broneering.builder()
                 .id(10L).laud(laud).kylaline("Test").kylalisteArv(8)
                 .algusAeg(start).loppAeg(end).staatus(BroneeringuStaatus.CONFIRMED).kommentaar("").build();
@@ -124,22 +124,22 @@ class BroneeringServiceTest {
         when(broneeringRepository.findById(10L)).thenReturn(Optional.of(booking));
         when(broneeringRepository.save(any(Broneering.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        BroneeringDTO result = broneeringService.cancelBooking(10L);
+        BroneeringDTO result = broneeringService.cancelBroneering(10L);
 
         assertThat(result.getStaatus()).isEqualTo(BroneeringuStaatus.CANCELLED);
     }
 
     @Test
-    void cancelBooking_throwsNotFoundForMissingId() {
+    void cancelBroneering_throwsNotFoundKuiLaudaPole() {
         when(broneeringRepository.findById(99L)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> broneeringService.cancelBooking(99L))
+        assertThatThrownBy(() -> broneeringService.cancelBroneering(99L))
                 .isInstanceOf(ResponseStatusException.class)
                 .hasMessageContaining("Booking not found");
     }
 
     @Test
-    void getAllBookings_returnsAllAsDTOs() {
+    void getAllBroneeringud_tagastabKoikDTOna() {
         Broneering b1 = Broneering.builder().id(1L).laud(laud).kylaline("A").kylalisteArv(2)
                 .algusAeg(start).loppAeg(end).staatus(BroneeringuStaatus.CONFIRMED).kommentaar("").build();
         Broneering b2 = Broneering.builder().id(2L).laud(laud).kylaline("B").kylalisteArv(3)

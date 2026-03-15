@@ -31,8 +31,12 @@ public class LauaService {
 
     private final RestoraniLaudRepository lauaRepository;
     private final BroneeringRepository broneeringRepository;
-    private final Map<Long, LauaPositsioonDTO> positsioonOverride = new ConcurrentHashMap<>();
+    private final Map<Long, LauaPositsioonDTO> positsioonOverride = new ConcurrentHashMap<>(); // Laudade uus asukoht
 
+    /**
+     * Saame kõikide laudade andmed
+     * @return Kõikide laudade andmed
+     */
     public List<RestoraniLaud> getAllLauad() {
         return lauaRepository.findAll().stream()
                 .map(this::applyOverride)
@@ -71,11 +75,16 @@ public class LauaService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Saa uus laua positsioon, kui see on muutunud
+     * @param id Laua id
+     * @param dto Laua X positsioon ja Y positsioon
+     */
     public void updatePositsioon(Long id, LauaPositsioonDTO dto) {
         if (!lauaRepository.existsById(id)) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Lauda ei leitud: " + id);
         }
-        positsioonOverride.put(id, dto);
+        positsioonOverride.put(id, dto); //Muudame positsiooni kui kutsutakse välja
     }
 
     /**
@@ -143,13 +152,13 @@ public class LauaService {
                 .anyMatch(r -> r.isVaba() && r.getMahutavus() >= filter.getKylalisteArv());
         log.info("  hasSingleFit={}", hasSingleFit);
         if (hasSingleFit) {
-            log.info("  Üksik laud mahub — kombineeritud soovitused vahele jäetud");
+            log.info("  Üksik laud mahub - kombineeritud soovitused vahele jäetud");
             return List.of();
         }
 
         List<LauaSoovitusedDTO> vabad = soovitused.stream()
                 .filter(LauaSoovitusedDTO::isVaba)
-                .collect(Collectors.toList());
+                .toList();
         log.info("  Vabade laudade arv: {}", vabad.size());
         vabad.forEach(l -> log.info("    vaba laud: {} tsoon={} mahutavus={} posX={} posY={} w={} h={}",
                 l.getLauaNumber(), l.getTsoon(), l.getMahutavus(), l.getPosX(), l.getPosY(), l.getWidth(), l.getHeight()));
@@ -224,8 +233,7 @@ public class LauaService {
      */
     private boolean sobibFiltriga(RestoraniLaud t, BroneeringFilterRequest f) {
         if (t.getMahutavus() < f.getKylalisteArv()) return false;
-        if (f.getTsoon() != null && t.getTsoon() != f.getTsoon()) return false;
-        return true;
+        return f.getTsoon() == null || t.getTsoon() == f.getTsoon();
     }
 
     /**

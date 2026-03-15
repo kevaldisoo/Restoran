@@ -12,7 +12,6 @@ export const useTableStore = defineStore('lauad', {
   }),
 
   getters: {
-    // Build a quick lookup map: tableId → recommendation DTO
     recommendationMap(state) {
       const map = {}
       for (const r of state.soovitused) map[r.id] = r

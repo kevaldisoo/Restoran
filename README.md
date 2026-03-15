@@ -46,6 +46,7 @@ Rakendus on saadaval aadressil **http://localhost**.
 
 - Frontend (nginx) jookseb pordil **80**
 - Backend jookseb konteinerite sisevõrgus ja ei ole otse väljastpoolt ligipääsetav
+- Dockeri käivitamine võtab umbes 2 minutit
 
 Peatamiseks:
 
@@ -95,3 +96,15 @@ npx cypress run
 ```
 
 Testifailid on kaustas `frontend/cypress/e2e/`.
+
+## JBDC backend testid
+
+Kõik testid korraga:
+
+```bash
+./gradlew test
+```
+
+## Tagasiside
+
+Tagasiside on [Tagasiside.md failis.](Tagasiside.md)

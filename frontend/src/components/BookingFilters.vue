@@ -6,7 +6,7 @@
 
     <div class="field">
       <label for="kuupaev">Kuupäev</label>
-      <input id="kuupaev" v-model="form.kuupaev" type="kuupaev" :min="today" required />
+      <input id="kuupaev" v-model="form.kuupaev" type="number" :min="today" required />
     </div>
 
     <div class="field-row">
@@ -72,12 +72,6 @@
 
 <script setup>
 import { reactive, ref } from 'vue'
-
-const props = defineProps({
-  loading: Boolean,
-  error: String,
-  searched: Boolean,
-})
 
 const emit = defineEmits(['search', 'clear'])
 

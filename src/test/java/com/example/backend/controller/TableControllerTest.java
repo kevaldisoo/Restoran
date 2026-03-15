@@ -31,14 +31,14 @@ class TableControllerTest {
     }
 
     @Test
-    void getAllTables_returns21Tables() {
+    void getAllLauad_tagastab21Lauda() {
         List<RestoraniLaud> lauad = lauaService.getAllLauad();
         assertThat(lauad).hasSize(21);
     }
 
     @Test
-    void getAllTables_tableHasRequiredFields() {
-        RestoraniLaud laud = lauaService.getAllLauad().get(0);
+    void getAllLauad_laualOnOlemasAndmed() {
+        RestoraniLaud laud = lauaService.getAllLauad().getFirst();
         assertThat(laud.getLauaNumber()).isNotNull();
         assertThat(laud.getMahutavus()).isPositive();
         assertThat(laud.getTsoon()).isNotNull();
@@ -47,21 +47,21 @@ class TableControllerTest {
     }
 
     @Test
-    void getRecommendations_withValidParams_returns21Results() {
+    void saaSoovitusi_headeFiltritega_tagastab21Lauda() {
         List<LauaSoovitusedDTO> result = lauaService.getSoovitusi(filter(4));
         assertThat(result).hasSize(21);
     }
 
     @Test
-    void getRecommendations_resultHasScoreAndAvailability() {
+    void saaSoovitusi_laudadelOnSkoorJaMahutavus() {
         List<LauaSoovitusedDTO> result = lauaService.getSoovitusi(filter(2));
-        LauaSoovitusedDTO first = result.get(0);
+        LauaSoovitusedDTO first = result.getFirst();
         assertThat(first.getSkoor()).isNotNull();
         assertThat(first.isMeetsFilter()).isNotNull();
     }
 
     @Test
-    void getRecommendations_withZoneFilter_onlyTerrassHasMeetsFilterTrue() {
+    void saaSoovitusi_terrassiFiltriga_naitabAinultTerrassiLaudu() {
         BroneeringFilterRequest f = filter(2);
         f.setTsoon(TsooniTyyp.TERRASS);
 
@@ -76,7 +76,7 @@ class TableControllerTest {
     }
 
     @Test
-    void getRecommendations_sortedByScoreDescending() {
+    void saaSoovitusi_skoorideJarjestusOnLangev() {
         BroneeringFilterRequest f = filter(2);
         f.setAknaAll(true);
 

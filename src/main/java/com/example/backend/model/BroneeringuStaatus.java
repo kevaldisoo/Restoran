@@ -2,5 +2,5 @@ package com.example.backend.model;
 
 public enum BroneeringuStaatus {
     CONFIRMED,
-    CANCELLED
+    CANCELLED // Tegelikult ei saa kasutaja veebilehel oma broneeringut tühistada, ei jõudnud seda implementeerida.
 }
