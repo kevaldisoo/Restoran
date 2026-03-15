@@ -27,6 +27,19 @@ export const api = {
     return request('/tables/recommendations?' + p.toString())
   },
 
+  getKombineeritudSoovitused({ kuupaev, algusAeg, loppAeg, kylalisteArv, tsoon, eelistabAknaAll, eelistabLastenurka, eelistabPrivaatsust }) {
+    const p = new URLSearchParams()
+    p.set('kuupaev', kuupaev)
+    p.set('algusAeg', algusAeg + ':00')
+    p.set('loppAeg', loppAeg + ':00')
+    p.set('kylalised', kylalisteArv)
+    if (tsoon)                       p.set('tsoon', tsoon)
+    if (eelistabAknaAll != null)     p.set('aknaAll', eelistabAknaAll)
+    if (eelistabLastenurka != null)  p.set('lastenurk', eelistabLastenurka)
+    if (eelistabPrivaatsust != null) p.set('privaatsus', eelistabPrivaatsust)
+    return request('/tables/combined-recommendations?' + p.toString())
+  },
+
   getBroneeringud() {
     return request('/bookings')
   },

@@ -42,44 +42,44 @@ public class DataInitializer implements CommandLineRunner {
 
         // ── Sisesaal — 3 rida × 3-5 lauda (T01–T12) ──────────────────────
         // Rida 1 - 3 lauda, 10 kohta
-        t.add(laud("T01", 10,  TsooniTyyp.SISESAAL, true, false,  30,  70, 100, 65, "rect"));
-        t.add(laud("T02", 10,  TsooniTyyp.SISESAAL, true, false, 210, 70, 100, 65, "rect"));
-        t.add(laud("T03", 10,  TsooniTyyp.SISESAAL, true, false, 390, 70, 100, 65, "rect"));
+        t.add(laud("T01", 10,  TsooniTyyp.SISESAAL, true, false,  30,  70, 100, 65));
+        t.add(laud("T02", 10,  TsooniTyyp.SISESAAL, true, false, 210, 70, 100, 65));
+        t.add(laud("T03", 10,  TsooniTyyp.SISESAAL, true, false, 390, 70, 100, 65));
         // Rida 2 - 4 lauda, 6 kohta
-        t.add(laud("T04", 6,  TsooniTyyp.SISESAAL, false, true,  30,  200, 80, 55, "rect"));
-        t.add(laud("T05", 6,  TsooniTyyp.SISESAAL, false, true, 155, 200, 80, 55, "rect"));
-        t.add(laud("T06", 6,  TsooniTyyp.SISESAAL, false,  false, 280, 200, 80, 55, "rect"));
-        t.add(laud("T07", 6,  TsooniTyyp.SISESAAL, true,  false, 405, 200, 80, 55, "rect"));
+        t.add(laud("T04", 6,  TsooniTyyp.SISESAAL, false, true,  30,  200, 80, 55));
+        t.add(laud("T05", 6,  TsooniTyyp.SISESAAL, false, true, 155, 200, 80, 55));
+        t.add(laud("T06", 6,  TsooniTyyp.SISESAAL, false,  false, 280, 200, 80, 55));
+        t.add(laud("T07", 6,  TsooniTyyp.SISESAAL, true,  false, 405, 200, 80, 55));
         // Rida 3 - 5 lauda, 2 kohta
-        t.add(laud("T08", 2, TsooniTyyp.SISESAAL, false,  true, 30, 330, 60, 45, "rect"));
-        t.add(laud("T09", 2,  TsooniTyyp.SISESAAL, false, true,  125,  330, 60, 45, "rect"));
-        t.add(laud("T10", 2,  TsooniTyyp.SISESAAL, false, false, 220, 330, 60, 45, "rect"));
-        t.add(laud("T11", 2,  TsooniTyyp.SISESAAL, false, false, 315, 330, 60, 45, "rect"));
-        t.add(laud("T12", 2,  TsooniTyyp.SISESAAL, true,  false, 410, 330, 60, 45, "rect"));
+        t.add(laud("T08", 2, TsooniTyyp.SISESAAL, false,  true, 30, 330, 60, 45));
+        t.add(laud("T09", 2,  TsooniTyyp.SISESAAL, false, true,  125,  330, 60, 45));
+        t.add(laud("T10", 2,  TsooniTyyp.SISESAAL, false, false, 220, 330, 60, 45));
+        t.add(laud("T11", 2,  TsooniTyyp.SISESAAL, false, false, 315, 330, 60, 45));
+        t.add(laud("T12", 2,  TsooniTyyp.SISESAAL, true,  false, 410, 330, 60, 45));
 
         // ── Terrass — 2 rida × 3 4-kohalist lauda (T13–T18) ────────────────────
-        t.add(laud("T13", 4, TsooniTyyp.TERRASS, true, false,  615, 130, 70, 50, "rect"));
-        t.add(laud("T14", 4, TsooniTyyp.TERRASS, true, false, 700, 130, 70, 50, "rect"));
-        t.add(laud("T15", 4, TsooniTyyp.TERRASS, true, false, 785, 130, 70, 50, "rect"));
-        t.add(laud("T16", 4, TsooniTyyp.TERRASS, true, false,  615, 280, 70, 50, "rect"));
-        t.add(laud("T17", 4, TsooniTyyp.TERRASS, true, false, 700, 280, 70, 50, "rect"));
-        t.add(laud("T18", 4, TsooniTyyp.TERRASS, true, false, 785, 280, 70, 50, "rect"));
+        t.add(laud("T13", 4, TsooniTyyp.TERRASS, true, false,  615, 130, 70, 50));
+        t.add(laud("T14", 4, TsooniTyyp.TERRASS, true, false, 700, 130, 70, 50));
+        t.add(laud("T15", 4, TsooniTyyp.TERRASS, true, false, 785, 130, 70, 50));
+        t.add(laud("T16", 4, TsooniTyyp.TERRASS, true, false,  615, 280, 70, 50));
+        t.add(laud("T17", 4, TsooniTyyp.TERRASS, true, false, 700, 280, 70, 50));
+        t.add(laud("T18", 4, TsooniTyyp.TERRASS, true, false, 785, 280, 70, 50));
 
         // ── Privaatruumid — 3 8-kohalist lauda (T19–T21) ─────────────────────────
-        t.add(laud("T19", 8,  TsooniTyyp.PRIVAATRUUM, false, true,  45,  490, 90, 60, "rect"));
-        t.add(laud("T20", 8,  TsooniTyyp.PRIVAATRUUM, false,  true, 330, 490, 90, 60, "rect"));
-        t.add(laud("T21", 8, TsooniTyyp.PRIVAATRUUM, false,  false, 635, 490, 90, 60, "rect"));
+        t.add(laud("T19", 8,  TsooniTyyp.PRIVAATRUUM, false, true,  45,  490, 90, 60));
+        t.add(laud("T20", 8,  TsooniTyyp.PRIVAATRUUM, false,  true, 330, 490, 90, 60));
+        t.add(laud("T21", 8, TsooniTyyp.PRIVAATRUUM, false,  false, 635, 490, 90, 60));
 
         return t;
     }
 
     private RestoraniLaud laud(String num, int cap, TsooniTyyp tsoon,
                                 boolean aken, boolean lastenurk,
-                                int x, int y, int w, int h, String shape) {
+                                int x, int y, int w, int h) {
         return RestoraniLaud.builder()
                 .lauaNumber(num).mahutavus(cap).tsoon(tsoon)
                 .aknaAll(aken).lastenurk(lastenurk)
-                .posX(x).posY(y).width(w).height(h).shape(shape)
+                .posX(x).posY(y).width(w).height(h)
                 .build();
     }
 

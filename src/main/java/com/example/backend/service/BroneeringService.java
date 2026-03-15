@@ -32,9 +32,9 @@ public class BroneeringService {
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND, "Table not found: " + req.getLauaId()));
 
-        if (laud.getMahutavus() < req.getKylalisteArv()) {
+        if (!req.isKombineeritud() && laud.getMahutavus() < req.getKylalisteArv()) { // Ei kontrollita juhul, kui lauad on kombineeritud
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    "Laua mahutavas on väiksem kui külaliste arv"
+                    "Laua mahutavus (%d) on väiksem kui külaliste arv (%d)"
                             .formatted(laud.getMahutavus(), req.getKylalisteArv()));
         }
 

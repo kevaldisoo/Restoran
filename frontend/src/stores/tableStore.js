@@ -5,6 +5,7 @@ export const useTableStore = defineStore('lauad', {
   state: () => ({
     lauad: [],
     soovitused: [],
+    kombineeritudSoovitused: [],
     loading: false,
     error: null,
     searched: false,
@@ -45,8 +46,17 @@ export const useTableStore = defineStore('lauad', {
       }
     },
 
+    async fetchKombineeritudSoovitused(filter) {
+      try {
+        this.kombineeritudSoovitused = await api.getKombineeritudSoovitused(filter)
+      } catch (e) {
+        this.kombineeritudSoovitused = []
+      }
+    },
+
     clearSoovitused() {
       this.soovitused = []
+      this.kombineeritudSoovitused = []
       this.searched = false
     },
   },

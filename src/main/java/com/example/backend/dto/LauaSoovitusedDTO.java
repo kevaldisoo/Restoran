@@ -17,7 +17,6 @@ public class LauaSoovitusedDTO {
     private int posY;
     private int width;
     private int height;
-    private String shape;
 
     /** True kui laud ei ole käesolevaks kellaajaks broneeritud. */
     private boolean vaba;
@@ -40,7 +39,6 @@ public class LauaSoovitusedDTO {
         dto.setPosY(t.getPosY());
         dto.setWidth(t.getWidth());
         dto.setHeight(t.getHeight());
-        dto.setShape(t.getShape());
         dto.setVaba(vaba);
         dto.setMeetsFilter(meetsFilter);
         dto.setSkoor(skoor);

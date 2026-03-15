@@ -29,12 +29,10 @@ public class RestoraniLaud {
     private boolean aknaAll;
     private boolean lastenurk;
 
-    // SVG hall plan position
+    // SVG saaliplaanis laua positsioon ja suurus
     private int posX;
     private int posY;
     private int width;
     private int height;
 
-    /** "rect" or "circle" — circles use width as radius */
-    private String shape;
 }

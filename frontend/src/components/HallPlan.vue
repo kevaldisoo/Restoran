@@ -22,87 +22,61 @@
       <!-- ── Legend ──────────────────────────────────────────────────────── -->
       <g transform="translate(14, 655)">
         <rect width="14" height="14" rx="3" fill="#94a3b8" />
-        <text x="18" y="11" class="legend-text">No search</text>
+        <text x="18" y="11" class="legend-text">Pole otsitud</text>
         <rect x="100" width="14" height="14" rx="3" fill="#4ade80" />
-        <text x="118" y="11" class="legend-text">Available</text>
+        <text x="118" y="11" class="legend-text">Vaba laud</text>
         <rect x="215" width="14" height="14" rx="3" fill="#f87171" />
-        <text x="233" y="11" class="legend-text">Occupied</text>
+        <text x="233" y="11" class="legend-text">Broneeritud</text>
         <rect x="320" width="14" height="14" rx="3" fill="#facc15" />
-        <text x="338" y="11" class="legend-text">Top pick</text>
+        <text x="338" y="11" class="legend-text">Parim valik</text>
         <rect x="420" width="14" height="14" rx="3" fill="#60a5fa" />
-        <text x="438" y="11" class="legend-text">Selected</text>
+        <text x="438" y="11" class="legend-text">Valitud</text>
         <rect x="520" width="14" height="14" rx="3" fill="#d1d5db" />
-        <text x="538" y="11" class="legend-text">Filtered out</text>
+        <text x="538" y="11" class="legend-text">Välja filtreeritud</text>
+        <rect x="630" width="14" height="14" rx="3" fill="#cc5500" />
+        <text x="648" y="11" class="legend-text">Kombineeritud</text>
       </g>
 
       <!-- ── Lauad ──────────────────────────────────────────────────────── -->
       <g v-for="laud in lauad" :key="laud.id">
-        <!-- Circle laud (Terrace) -->
-        <template v-if="laud.shape === 'circle'">
-          <circle
-            :cx="laud.posX"
-            :cy="laud.posY"
-            :r="laud.width"
-            :fill="laudColor(laud)"
-            :stroke="laud.id === selectedId ? '#1d4ed8' : '#6b7280'"
-            :stroke-width="laud.id === selectedId ? 3 : 1.5"
-            class="laud-shape"
-            :class="{ clickable: isClickable(laud), selected: laud.id === selectedId }"
-            @click="handleClick(laud)"
-          />
-          <text
-            :x="laud.posX"
-            :y="laud.posY - 4"
-            class="laud-num"
-          >{{ laud.lauaNumber }}</text>
-          <text
-            :x="laud.posX"
-            :y="laud.posY + 11"
-            class="laud-cap"
-          >{{ laud.mahutavus }}p</text>
-        </template>
+        <rect
+          :x="laud.posX"
+          :y="laud.posY"
+          :width="laud.width"
+          :height="laud.height"
+          rx="4"
+          :fill="laudColor(laud)"
+          :stroke="laud.id === selectedId ? '#1d4ed8' : '#6b7280'"
+          :stroke-width="laud.id === selectedId ? 3 : 1.5"
+          class="laud-shape"
+          :class="{ clickable: isClickable(laud), selected: laud.id === selectedId }"
+          @click="handleClick(laud)"
+        />
+        <text
+          :x="laud.posX + laud.width / 2"
+          :y="laud.posY + laud.height / 2 - 5"
+          class="laud-num"
+        >{{ laud.lauaNumber }}</text>
+        <text
+          :x="laud.posX + laud.width / 2"
+          :y="laud.posY + laud.height / 2 + 10"
+          class="laud-cap"
+        >{{ laud.mahutavus }}p</text>
 
-        <!-- Rectangular laud -->
-        <template v-else>
-          <rect
-            :x="laud.posX"
-            :y="laud.posY"
-            :width="laud.width"
-            :height="laud.height"
-            rx="4"
-            :fill="laudColor(laud)"
-            :stroke="laud.id === selectedId ? '#1d4ed8' : '#6b7280'"
-            :stroke-width="laud.id === selectedId ? 3 : 1.5"
-            class="laud-shape"
-            :class="{ clickable: isClickable(laud), selected: laud.id === selectedId }"
-            @click="handleClick(laud)"
-          />
-          <text
-            :x="laud.posX + laud.width / 2"
-            :y="laud.posY + laud.height / 2 - 5"
-            class="laud-num"
-          >{{ laud.lauaNumber }}</text>
-          <text
-            :x="laud.posX + laud.width / 2"
-            :y="laud.posY + laud.height / 2 + 10"
-            class="laud-cap"
-          >{{ laud.mahutavus }}p</text>
-        </template>
-
-        <!-- Accessibility icon -->
+        <!-- Lastenurga märk -->
         <text
           v-if="laud.lastenurk"
-          :x="laud.shape === 'circle' ? laud.posX + laud.width - 4 : laud.posX + laud.width - 10"
-          :y="laud.shape === 'circle' ? laud.posY - laud.height + 4 : laud.posY + 12"
+          :x="laud.posX + laud.width - 10"
+          :y="laud.posY + 12"
           class="icon-text"
           title="Lastenurk"
         >🕹️</text>
 
-        <!-- Window icon -->
+        <!-- Akna märk -->
         <text
           v-if="laud.aknaAll"
-          :x="laud.shape === 'circle' ? laud.posX - laud.width + 4 : laud.posX + 2"
-          :y="laud.shape === 'circle' ? laud.posY - laud.height + 4 : laud.posY + 12"
+          :x="laud.posX + 2"
+          :y="laud.posY + 12"
           class="icon-text"
           title="Window view"
         >🪟</text>
@@ -123,6 +97,10 @@ const props = defineProps({
     type: Object,
     default: () => ({}),
   },
+  kombineeritudSoovitused: {
+    type: Array,
+    default: () => [],
+  },
   selectedId: {
     type: Number,
     default: null,
@@ -135,6 +113,15 @@ const props = defineProps({
 
 const emit = defineEmits(['select'])
 
+const combinedIds = computed(() => {
+  const ids = new Set()
+  for (const pair of props.kombineeritudSoovitused) {
+    ids.add(pair.laud1.id)
+    ids.add(pair.laud2.id)
+  }
+  return ids
+})
+
 const topSkoor = computed(() => {
   const skoorid = Object.values(props.recommendationMap)
     .filter((r) => r.vaba && r.meetsFilter)
@@ -143,19 +130,21 @@ const topSkoor = computed(() => {
 })
 
 function laudColor(laud) {
-  if (laud.id === props.selectedId) return '#60a5fa' // blue — selected
+  if (laud.id === props.selectedId) return '#60a5fa' // sinine - valitud
 
-  if (!props.searched) return '#94a3b8' // gray — no search yet
+  if (!props.searched) return '#94a3b8' // hall - pole otsimist alustatud
+
+  if (combinedIds.value.has(laud.id)) return '#cc5500' // oranž - kombineeritav
 
   const rec = props.recommendationMap[laud.id]
   if (!rec) return '#94a3b8'
 
-  if (!rec.vaba) return '#f87171'        // red — occupied
-  if (!rec.meetsFilter) return '#d1d5db' // light gray — filtered out
+  if (!rec.vaba) return '#f87171'        // punane - broneeritud
+  if (!rec.meetsFilter) return '#d1d5db' // hall - ei vasta filtritele
 
-  // Available and matches: best gets yellow, others green
-  if (rec.skoor === topSkoor.value) return '#facc15' // yellow — top pick
-  return '#4ade80'                                    // green — available
+  // Kui on vaba, siis on laud roheline, va parim valik, mis on kollane
+  if (rec.skoor === topSkoor.value) return '#facc15' // kollane - parim valik
+  return '#4ade80'                                    // roheline - vaba
 }
 
 function isClickable(laud) {

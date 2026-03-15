@@ -7,14 +7,19 @@ import com.example.backend.model.TsooniTyyp;
 import com.example.backend.repository.BroneeringRepository;
 import com.example.backend.repository.RestoraniLaudRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import com.example.backend.dto.KombineeritudLauadDTO;
+
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class LauaService {
@@ -53,6 +58,94 @@ public class LauaService {
                 })
                 .sorted(Comparator.comparingInt(LauaSoovitusedDTO::getSkoor).reversed())
                 .collect(Collectors.toList());
+    }
+
+    /**
+     * Tagastab paarid laudadest, mida saab kokku lükata, kui ükski üksik laud ei mahu suurele grupile.
+     * Tingimused: mõlemad lauad vabad, samas tsoonis, sama rida (posY ühtib), x-serv kaugus &lt; 180 SVG ühikut.
+     */
+    public List<KombineeritudLauadDTO> getKombineeritudSoovitused(BroneeringFilterRequest filter) {
+        log.info("getKombineeritudSoovitused: kylalisteArv={}, kuupaev={}, algus={}, lopp={}",
+                filter.getKylalisteArv(), filter.getKuupaev(), filter.getAlgusAeg(), filter.getLoppAeg());
+
+        List<LauaSoovitusedDTO> soovitused = getSoovitusi(filter);
+        log.info("  Kokku laudu: {}", soovitused.size());
+
+        // Pakume kombineeringut ainult siis, kui ükski üksik laud ei mahu
+        boolean hasSingleFit = soovitused.stream()
+                .anyMatch(r -> r.isVaba() && r.getMahutavus() >= filter.getKylalisteArv());
+        log.info("  hasSingleFit={}", hasSingleFit);
+        if (hasSingleFit) {
+            log.info("  Üksik laud mahub — kombineeritud soovitused vahele jäetud");
+            return List.of();
+        }
+
+        List<LauaSoovitusedDTO> vabad = soovitused.stream()
+                .filter(LauaSoovitusedDTO::isVaba)
+                .collect(Collectors.toList());
+        log.info("  Vabade laudade arv: {}", vabad.size());
+        vabad.forEach(l -> log.info("    vaba laud: {} tsoon={} mahutavus={} posX={} posY={} w={} h={}",
+                l.getLauaNumber(), l.getTsoon(), l.getMahutavus(), l.getPosX(), l.getPosY(), l.getWidth(), l.getHeight()));
+
+        List<KombineeritudLauadDTO> kombineeringud = new ArrayList<>();
+
+        for (int i = 0; i < vabad.size(); i++) {
+            for (int j = i + 1; j < vabad.size(); j++) {
+                LauaSoovitusedDTO l1 = vabad.get(i);
+                LauaSoovitusedDTO l2 = vabad.get(j);
+
+                if (l1.getTsoon() != l2.getTsoon()) {
+                    log.debug("  {} + {}: erinev tsoon ({} vs {})", l1.getLauaNumber(), l2.getLauaNumber(), l1.getTsoon(), l2.getTsoon());
+                    continue;
+                }
+
+                if (l1.getPosY() != l2.getPosY()) {
+                    log.info("  {} + {}: erinev rida (posY {} vs {})", l1.getLauaNumber(), l2.getLauaNumber(), l1.getPosY(), l2.getPosY());
+                    continue;
+                }
+
+                int hGap = xGap(l1, l2);
+                if (hGap >= 100) {
+                    log.info("  {} + {}: liiga kaugel x-teljel (hGap={})", l1.getLauaNumber(), l2.getLauaNumber(), hGap);
+                    continue;
+                }
+
+                int combinedCap = l1.getMahutavus() + l2.getMahutavus();
+                if (combinedCap < filter.getKylalisteArv()) {
+                    log.info("  {} + {}: kombineeritud mahutavus {} < {}", l1.getLauaNumber(), l2.getLauaNumber(), combinedCap, filter.getKylalisteArv());
+                    continue;
+                }
+
+                log.info("  {} + {}: SOBIB (hGap={}, kombineeritudMahutavus={})", l1.getLauaNumber(), l2.getLauaNumber(), hGap, combinedCap);
+                kombineeringud.add(new KombineeritudLauadDTO(
+                        l1, l2, combinedCap, calculateCombinedScore(l1, l2, filter)));
+            }
+        }
+
+        log.info("  Kombineeringute arv: {}", kombineeringud.size());
+        kombineeringud.sort(Comparator.comparingInt(KombineeritudLauadDTO::getSkoor).reversed());
+        return kombineeringud;
+    }
+
+    /** Kontrollime, kas kaks lauda on üksteise lähedal x-teljel (serv-serv kaugus < 100 SVG ühikut). */
+    private boolean areClose(LauaSoovitusedDTO a, LauaSoovitusedDTO b) {
+        return xGap(a, b) < 100;
+    }
+
+    /** Arvutab serv-serv kauguse x-teljel kahe ristküliku vahel. */
+    private int xGap(LauaSoovitusedDTO a, LauaSoovitusedDTO b) {
+        return Math.max(0, Math.max(a.getPosX(), b.getPosX())
+                - Math.min(a.getPosX() + a.getWidth(), b.getPosX() + b.getWidth()));
+    }
+
+    private int calculateCombinedScore(LauaSoovitusedDTO l1, LauaSoovitusedDTO l2, BroneeringFilterRequest f) {
+        int skoor = 100;
+        int ylejaak = (l1.getMahutavus() + l2.getMahutavus()) - f.getKylalisteArv();
+        skoor -= ylejaak * 10;
+        if (Boolean.TRUE.equals(f.getAknaAll()) && (l1.isAknaAll() || l2.isAknaAll()))       skoor += 25;
+        if (Boolean.TRUE.equals(f.getLastenurk()) && (l1.isLastenurk() || l2.isLastenurk())) skoor += 25;
+        if (Boolean.TRUE.equals(f.getPrivaatsus()) && l1.getTsoon() == TsooniTyyp.PRIVAATRUUM) skoor += 25;
+        return skoor;
     }
 
     // ── helpers ──────────────────────────────────────────────────────────────

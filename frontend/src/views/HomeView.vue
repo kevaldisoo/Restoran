@@ -14,10 +14,12 @@
 
       <BookingResults
         :soovitused="tableStore.soovitused"
+        :kombineeritud-soovitused="tableStore.kombineeritudSoovitused"
         :selected-id="selectedTableId"
         :searched="tableStore.searched"
         @select="selectedTableId = $event"
         @book="openModal"
+        @book-combined="openModalKombineeritud"
       />
     </aside>
 
@@ -30,6 +32,7 @@
       <HallPlan
         :lauad="tableStore.lauad"
         :recommendation-map="tableStore.recommendationMap"
+        :kombineeritud-soovitused="tableStore.kombineeritudSoovitused"
         :selected-id="selectedTableId"
         :searched="tableStore.searched"
         @select="onHallSelect"
@@ -75,6 +78,7 @@ const bookingStore = useBookingStore()
 const selectedTableId = ref(null)
 const showModal   = ref(false)
 const modalTable  = ref(null)
+const modalLaud2  = ref(null)
 const lastFilter  = ref(null)
 const toast       = ref('')
 
@@ -92,6 +96,7 @@ async function onSearch(filter) {
   lastFilter.value = filter
   selectedTableId.value = null
   await tableStore.fetchSoovitused(filter)
+  await tableStore.fetchKombineeritudSoovitused(filter)
 }
 
 function onClear() {
@@ -107,22 +112,49 @@ function openModal(rec) {
   showModal.value = true
 }
 
+function openModalKombineeritud(pair) {
+  modalTable.value = {
+    ...pair.laud1,
+    lauaNumber: `${pair.laud1.lauaNumber} + ${pair.laud2.lauaNumber}`,
+    mahutavus: pair.kombineeritudMahutavus,
+  }
+  modalLaud2.value = pair.laud2
+  bookingStore.error = null
+  showModal.value = true
+}
+
 async function onConfirmBooking({ kylaline, kommentaar }) {
   if (!modalTable.value || !lastFilter.value) return
   const f = lastFilter.value
   try {
     await bookingStore.createBroneering({
-      lauaId:       modalTable.value.id,
-      kylastaja:    kylaline,
-      kylalisteArv: f.kylalisteArv,
-      algusAeg:     `${f.kuupaev}T${f.algusAeg}:00`,
-      loppAeg:      `${f.kuupaev}T${f.loppAeg}:00`,
+      lauaId:        modalTable.value.id,
+      kylastaja:     kylaline,
+      kylalisteArv:  f.kylalisteArv,
+      algusAeg:      `${f.kuupaev}T${f.algusAeg}:00`,
+      loppAeg:       `${f.kuupaev}T${f.loppAeg}:00`,
       kommentaar,
+      kombineeritud: !!modalLaud2.value,
     })
+    if (modalLaud2.value) {
+      await bookingStore.createBroneering({
+        lauaId:        modalLaud2.value.id,
+        kylastaja:     kylaline,
+        kylalisteArv:  f.kylalisteArv,
+        algusAeg:      `${f.kuupaev}T${f.algusAeg}:00`,
+        loppAeg:       `${f.kuupaev}T${f.loppAeg}:00`,
+        kommentaar,
+        kombineeritud: true,
+      })
+    }
+    const toastMsg = modalLaud2.value
+      ? `Tables ${modalTable.value.lauaNumber} booked for ${kylaline}!`
+      : `Table ${modalTable.value.lauaNumber} booked for ${kylaline}!`
+    modalLaud2.value = null
     showModal.value = false
     selectedTableId.value = null
     await tableStore.fetchSoovitused(f)
-    showToast(`Table ${modalTable.value.lauaNumber} booked for ${kylaline}!`)
+    showToast(toastMsg)
   } catch {
     // error shown inside modal via bookingStore.error
   }
@@ -137,8 +169,7 @@ function showToast(msg) {
 <style scoped>
 .page {
   display: flex;
-  height: 100vh;
-  overflow: hidden;
+  min-height: 100vh;
 }
 
 .sidebar {
@@ -160,7 +191,7 @@ function showToast(msg) {
 
 .main {
   flex: 1;
-  overflow-y: auto;
+  overflow-y: visible;
   padding: 20px 24px;
   display: flex;
   flex-direction: column;
