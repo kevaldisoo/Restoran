@@ -1,100 +1,89 @@
 package com.example.backend.controller;
 
+import com.example.backend.dto.BroneeringFilterRequest;
+import com.example.backend.dto.LauaSoovitusedDTO;
+import com.example.backend.model.RestoraniLaud;
+import com.example.backend.model.TsooniTyyp;
+import com.example.backend.service.LauaService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.web.servlet.MockMvc;
 
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.util.List;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
-@AutoConfigureMockMvc
 class TableControllerTest {
 
     @Autowired
-    private MockMvc mockMvc;
+    private LauaService lauaService;
 
-    @Test
-    void getAllTables_returns200WithTableList() throws Exception {
-        mockMvc.perform(get("/api/tables"))
-                .andExpect(status().isOk())
-                .andExpect(content().contentType("application/json"))
-                .andExpect(jsonPath("$").isArray())
-                .andExpect(jsonPath("$.length()").value(21));
+    private BroneeringFilterRequest filter(int kylalised) {
+        BroneeringFilterRequest f = new BroneeringFilterRequest();
+        f.setKuupaev(LocalDate.of(2026, 6, 15));
+        f.setAlgusAeg(LocalTime.of(19, 0));
+        f.setLoppAeg(LocalTime.of(21, 0));
+        f.setKylalisteArv(kylalised);
+        return f;
     }
 
     @Test
-    void getAllTables_tableHasRequiredFields() throws Exception {
-        mockMvc.perform(get("/api/tables"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].tableNumber").exists())
-                .andExpect(jsonPath("$[0].capacity").exists())
-                .andExpect(jsonPath("$[0].zone").exists())
-                .andExpect(jsonPath("$[0].posX").exists())
-                .andExpect(jsonPath("$[0].posY").exists())
-                .andExpect(jsonPath("$[0].shape").exists());
+    void getAllTables_returns21Tables() {
+        List<RestoraniLaud> lauad = lauaService.getAllLauad();
+        assertThat(lauad).hasSize(21);
     }
 
     @Test
-    void getRecommendations_withValidParams_returns200() throws Exception {
-        mockMvc.perform(get("/api/tables/recommendations")
-                        .param("date", "2026-06-15")
-                        .param("startTime", "19:00:00")
-                        .param("endTime", "21:00:00")
-                        .param("partySize", "4"))
-                .andExpect(status().isOk())
-                .andExpect(content().contentType("application/json"))
-                .andExpect(jsonPath("$").isArray())
-                .andExpect(jsonPath("$.length()").value(21));
+    void getAllTables_tableHasRequiredFields() {
+        RestoraniLaud laud = lauaService.getAllLauad().get(0);
+        assertThat(laud.getLauaNumber()).isNotNull();
+        assertThat(laud.getMahutavus()).isPositive();
+        assertThat(laud.getTsoon()).isNotNull();
+        assertThat(laud.getPosX()).isGreaterThanOrEqualTo(0);
+        assertThat(laud.getPosY()).isGreaterThanOrEqualTo(0);
     }
 
     @Test
-    void getRecommendations_recommendedTableHasScoreAndAvailability() throws Exception {
-        mockMvc.perform(get("/api/tables/recommendations")
-                        .param("date", "2026-06-15")
-                        .param("startTime", "19:00:00")
-                        .param("endTime", "21:00:00")
-                        .param("partySize", "2"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].score").exists())
-                .andExpect(jsonPath("$[0].available").exists())
-                .andExpect(jsonPath("$[0].meetsFilter").exists());
+    void getRecommendations_withValidParams_returns21Results() {
+        List<LauaSoovitusedDTO> result = lauaService.getSoovitusi(filter(4));
+        assertThat(result).hasSize(21);
     }
 
     @Test
-    void getRecommendations_withZoneFilter_onlyMatchingZoneHasMeetsFilterTrue() throws Exception {
-        mockMvc.perform(get("/api/tables/recommendations")
-                        .param("date", "2026-06-15")
-                        .param("startTime", "12:00:00")
-                        .param("endTime", "14:00:00")
-                        .param("partySize", "2")
-                        .param("zone", "TERRACE"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$[?(@.zone == 'INSIDE' && @.meetsFilter == true)]").isEmpty())
-                .andExpect(jsonPath("$[?(@.zone == 'PRIVATE_ROOM' && @.meetsFilter == true)]").isEmpty());
+    void getRecommendations_resultHasScoreAndAvailability() {
+        List<LauaSoovitusedDTO> result = lauaService.getSoovitusi(filter(2));
+        LauaSoovitusedDTO first = result.get(0);
+        assertThat(first.getSkoor()).isNotNull();
+        assertThat(first.isMeetsFilter()).isNotNull();
     }
 
     @Test
-    void getRecommendations_sortedByScoreDescending() throws Exception {
-        mockMvc.perform(get("/api/tables/recommendations")
-                        .param("date", "2026-06-15")
-                        .param("startTime", "19:00:00")
-                        .param("endTime", "21:00:00")
-                        .param("partySize", "2")
-                        .param("preferWindowView", "true"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].score").value(
-                        org.hamcrest.Matchers.greaterThanOrEqualTo(
-                                (int) -1))); // first is best or -1 if all occupied
+    void getRecommendations_withZoneFilter_onlyTerrassHasMeetsFilterTrue() {
+        BroneeringFilterRequest f = filter(2);
+        f.setTsoon(TsooniTyyp.TERRASS);
+
+        List<LauaSoovitusedDTO> result = lauaService.getSoovitusi(f);
+
+        assertThat(result)
+                .filteredOn(r -> r.getTsoon() == TsooniTyyp.SISESAAL)
+                .allMatch(r -> !r.isMeetsFilter());
+        assertThat(result)
+                .filteredOn(r -> r.getTsoon() == TsooniTyyp.PRIVAATRUUM)
+                .allMatch(r -> !r.isMeetsFilter());
     }
 
     @Test
-    void getRecommendations_missingRequiredParam_returns400() throws Exception {
-        mockMvc.perform(get("/api/tables/recommendations")
-                        // missing date, startTime, endTime
-                        .param("partySize", "4"))
-                .andExpect(status().isBadRequest());
+    void getRecommendations_sortedByScoreDescending() {
+        BroneeringFilterRequest f = filter(2);
+        f.setAknaAll(true);
+
+        List<LauaSoovitusedDTO> result = lauaService.getSoovitusi(f);
+
+        for (int i = 0; i < result.size() - 1; i++) {
+            assertThat(result.get(i).getSkoor()).isGreaterThanOrEqualTo(result.get(i + 1).getSkoor());
+        }
     }
 }

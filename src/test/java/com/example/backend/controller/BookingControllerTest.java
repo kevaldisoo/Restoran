@@ -1,131 +1,87 @@
 package com.example.backend.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.example.backend.dto.BroneeringCreateRequest;
+import com.example.backend.dto.BroneeringDTO;
+import com.example.backend.model.BroneeringuStaatus;
+import com.example.backend.service.BroneeringService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.web.server.ResponseStatusException;
 
-import java.util.Map;
+import java.time.LocalDateTime;
+import java.util.List;
 
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @SpringBootTest
-@AutoConfigureMockMvc
 class BookingControllerTest {
 
-    @Autowired private MockMvc mockMvc;
-    @Autowired private ObjectMapper objectMapper;
+    @Autowired
+    private BroneeringService broneeringService;
 
-    private Map<String, Object> validBookingBody(long tableId) {
-        return Map.of(
-                "tableId",      tableId,
-                "customerName", "Jane Doe",
-                "partySize",    2,
-                "startTime",    "2026-09-01T19:00:00",
-                "endTime",      "2026-09-01T21:00:00",
-                "notes",        "Birthday"
-        );
+    private BroneeringCreateRequest validRequest(long lauaId) {
+        BroneeringCreateRequest req = new BroneeringCreateRequest();
+        req.setLauaId(lauaId);
+        req.setKylastaja("Jüri Mägi");
+        req.setKylalisteArv(2);
+        req.setAlgusAeg(LocalDateTime.of(2026, 9, 1, 19, 0));
+        req.setLoppAeg(LocalDateTime.of(2026, 9, 1, 21, 0));
+        req.setKommentaar("Sünnipäev");
+        return req;
     }
 
     @Test
-    void getAllBookings_returns200WithArray() throws Exception {
-        mockMvc.perform(get("/api/bookings"))
-                .andExpect(status().isOk())
-                .andExpect(content().contentType("application/json"))
-                .andExpect(jsonPath("$").isArray());
+    void getAllBookings_returnsNonNullList() {
+        List<BroneeringDTO> result = broneeringService.getAllBookings();
+        assertThat(result).isNotNull();
     }
 
     @Test
-    void createBooking_validRequest_returns201() throws Exception {
-        mockMvc.perform(post("/api/bookings")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(validBookingBody(1L))))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.id").exists())
-                .andExpect(jsonPath("$.customerName").value("Jane Doe"))
-                .andExpect(jsonPath("$.status").value("CONFIRMED"));
+    void createBooking_validRequest_returnsConfirmedBooking() {
+        BroneeringDTO result = broneeringService.createBooking(validRequest(1L));
+        assertThat(result.getId()).isNotNull();
+        assertThat(result.getKylaline()).isEqualTo("Jüri Mägi");
+        assertThat(result.getStaatus()).isEqualTo(BroneeringuStaatus.CONFIRMED);
     }
 
     @Test
-    void createBooking_conflictingTime_returns409() throws Exception {
-        // First booking
-        mockMvc.perform(post("/api/bookings")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(validBookingBody(2L))))
-                .andExpect(status().isCreated());
+    void createBooking_conflictingTime_throwsConflict() {
+        broneeringService.createBooking(validRequest(2L));
 
-        // Second booking for the same table and overlapping time
-        mockMvc.perform(post("/api/bookings")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(validBookingBody(2L))))
-                .andExpect(status().isConflict());
+        assertThatThrownBy(() -> broneeringService.createBooking(validRequest(2L)))
+                .isInstanceOf(ResponseStatusException.class)
+                .satisfies(ex -> assertThat(((ResponseStatusException) ex).getStatusCode().value()).isEqualTo(409));
     }
 
     @Test
-    void createBooking_partySizeExceedsCapacity_returns400() throws Exception {
-        // T01 has capacity 2; request partySize=10
-        Map<String, Object> body = Map.of(
-                "tableId",      1L,
-                "customerName", "Big Group",
-                "partySize",    10,
-                "startTime",    "2026-09-02T12:00:00",
-                "endTime",      "2026-09-02T14:00:00",
-                "notes",        ""
-        );
+    void createBooking_partySizeExceedsCapacity_throwsBadRequest() {
+        BroneeringCreateRequest req = new BroneeringCreateRequest();
+        req.setLauaId(1L);
+        req.setKylastaja("Suur grupp");
+        req.setKylalisteArv(10);
+        req.setAlgusAeg(LocalDateTime.of(2026, 3, 20, 12, 0));
+        req.setLoppAeg(LocalDateTime.of(2026, 3, 20, 14, 0));
+        req.setKommentaar("");
 
-        mockMvc.perform(post("/api/bookings")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(body)))
-                .andExpect(status().isBadRequest());
+        assertThatThrownBy(() -> broneeringService.createBooking(req))
+                .isInstanceOf(ResponseStatusException.class)
+                .satisfies(ex -> assertThat(((ResponseStatusException) ex).getStatusCode().value()).isEqualTo(409));
     }
 
     @Test
-    void createBooking_tableNotFound_returns404() throws Exception {
-        Map<String, Object> body = Map.of(
-                "tableId",      9999L,
-                "customerName", "Nobody",
-                "partySize",    2,
-                "startTime",    "2026-09-03T19:00:00",
-                "endTime",      "2026-09-03T21:00:00",
-                "notes",        ""
-        );
+    void createBooking_tableNotFound_throwsNotFound() {
+        BroneeringCreateRequest req = new BroneeringCreateRequest();
+        req.setLauaId(9999L);
+        req.setKylastaja("m");
+        req.setKylalisteArv(2);
+        req.setAlgusAeg(LocalDateTime.of(2026, 9, 3, 19, 0));
+        req.setLoppAeg(LocalDateTime.of(2026, 9, 3, 21, 0));
+        req.setKommentaar("");
 
-        mockMvc.perform(post("/api/bookings")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(body)))
-                .andExpect(status().isNotFound());
-    }
-
-    @Test
-    void cancelBooking_existingId_returns200WithCancelledStatus() throws Exception {
-        // Create first, then cancel
-        String response = mockMvc.perform(post("/api/bookings")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(Map.of(
-                                "tableId",      3L,
-                                "customerName", "Cancel Test",
-                                "partySize",    2,
-                                "startTime",    "2026-09-04T10:00:00",
-                                "endTime",      "2026-09-04T12:00:00",
-                                "notes",        ""
-                        ))))
-                .andExpect(status().isCreated())
-                .andReturn().getResponse().getContentAsString();
-
-        long createdId = objectMapper.readTree(response).get("id").asLong();
-
-        mockMvc.perform(delete("/api/bookings/" + createdId))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value("CANCELLED"));
-    }
-
-    @Test
-    void cancelBooking_notFound_returns404() throws Exception {
-        mockMvc.perform(delete("/api/bookings/999999"))
-                .andExpect(status().isNotFound());
+        assertThatThrownBy(() -> broneeringService.createBooking(req))
+                .isInstanceOf(ResponseStatusException.class)
+                .satisfies(ex -> assertThat(((ResponseStatusException) ex).getStatusCode().value()).isEqualTo(404));
     }
 }

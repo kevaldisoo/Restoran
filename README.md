@@ -1,14 +1,14 @@
 # Restoran
 
-Restorani rakendus, mis kasutab Vue frontendi ja Spring Boot backendi
+Restorani rakendus, mis kasutab Vue frontendi ja Spring Boot backendi.
 
 ## Eeldused
 
 - Java 21+
-- Node.js 20.19+ võ 22.12+
+- Node.js 20.19+ või 22.12+
 - npm
 
-## Backend jooksutamine
+## Backend jooksutamine (ilma dockerita)
 
 root kaustas:
 
@@ -21,7 +21,7 @@ Backend jookseb lehel **http://localhost:8080**.
 H2 konsoolile saab ligi **http://localhost:8080/h2-console**
 (JDBC URL: `jdbc:h2:mem:restorandb`, username: `sa`, password: *(tühi)*)
 
-## Frontend jooksutamine
+## Frontend jooksutamine (ilma dockerita)
 
 `frontend/` kaustas:
 
@@ -31,6 +31,27 @@ npm run dev
 ```
 
 Frontend serverile saab ligi veebilehel **http://localhost:5173**.
+
+## Dockeris jooksutamine (soovitatav)
+
+Veendu, et Docker Desktop on käivitatud.
+
+root kaustas:
+
+```bash
+docker compose up --build
+```
+
+Rakendus on saadaval aadressil **http://localhost**.
+
+- Frontend (nginx) jookseb pordil **80**
+- Backend jookseb konteinerite sisevõrgus ja ei ole otse väljastpoolt ligipääsetav
+
+Peatamiseks:
+
+```bash
+docker compose down
+```
 
 ## E2E testide jooksutamine (Cypress)
 

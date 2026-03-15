@@ -59,7 +59,8 @@
       </label>
     </fieldset>
 
-    <p v-if="error" class="error-msg">{{ error }}</p>
+    <p v-if="validationError" class="error-msg">{{ validationError }}</p>
+    <p v-else-if="error" class="error-msg">{{ error }}</p>
 
     <button type="submit" class="btn-primary" :disabled="loading">
       {{ loading ? 'Otsin…' : 'Otsi laudu' }}
@@ -70,9 +71,17 @@
 </template>
 
 <script setup>
-import { reactive } from 'vue'
+import { reactive, ref } from 'vue'
+
+const props = defineProps({
+  loading: Boolean,
+  error: String,
+  searched: Boolean,
+})
 
 const emit = defineEmits(['search', 'clear'])
+
+const validationError = ref('')
 
 const today = new Date().toISOString().slice(0, 10)
 
@@ -88,6 +97,11 @@ const form = reactive({
 })
 
 function submit() {
+  validationError.value = ''
+  if (form.algusAeg < '11:00' || form.loppAeg > '23:00') {
+    validationError.value = 'Restoran on avatud 11:00–23:00'
+    return
+  }
   emit('search', {
     kuupaev: form.kuupaev,
     algusAeg: form.algusAeg,

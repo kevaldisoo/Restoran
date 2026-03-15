@@ -2,7 +2,6 @@ package com.example.backend.service;
 
 import com.example.backend.dto.BroneeringFilterRequest;
 import com.example.backend.dto.LauaSoovitusedDTO;
-import com.example.backend.model.Booking;
 import com.example.backend.model.Broneering;
 import com.example.backend.model.BroneeringuStaatus;
 import com.example.backend.model.RestoraniLaud;
@@ -29,97 +28,97 @@ import static org.mockito.Mockito.when;
 class LauaServiceTest {
 
     @Mock
-    private RestoraniLaudRepository tableRepository;
+    private RestoraniLaudRepository laudRepository;
 
     @Mock
     private BroneeringRepository broneeringRepository;
 
     @InjectMocks
-    private LauaService tableService;
+    private LauaService lauaService;
 
-    private RestoraniLaud inside2p;
-    private RestoraniLaud inside4p;
-    private RestoraniLaud terrace4p;
-    private RestoraniLaud private6p;
+    private RestoraniLaud sees2inimest;
+    private RestoraniLaud sees6inimest;
+    private RestoraniLaud terrass4inimest;
+    private RestoraniLaud privaat8inimest;
 
     @BeforeEach
     void setUp() {
-        inside2p = RestoraniLaud.builder()
-                .id(1L).tableNumber("T01").capacity(2)
-                .zone(TsooniTyyp.INSIDE).windowView(false).accessible(true)
-                .posX(30).posY(70).width(60).height(45).shape("rect").build();
+        sees2inimest = RestoraniLaud.builder()
+                .id(1L).lauaNumber("T08").mahutavus(2)
+                .tsoon(TsooniTyyp.SISESAAL).aknaAll(false).lastenurk(true)
+                .posX(30).posY(330).width(60).height(45).build();
 
-        inside4p = RestoraniLaud.builder()
-                .id(2L).tableNumber("T02").capacity(4)
-                .zone(TsooniTyyp.INSIDE).windowView(true).accessible(false)
-                .posX(155).posY(70).width(75).height(50).shape("rect").build();
+        sees6inimest = RestoraniLaud.builder()
+                .id(2L).lauaNumber("T05").mahutavus(6)
+                .tsoon(TsooniTyyp.SISESAAL).aknaAll(false).lastenurk(true)
+                .posX(155).posY(200).width(80).height(55).build();
 
-        terrace4p = RestoraniLaud.builder()
-                .id(3L).tableNumber("T13").capacity(4)
-                .zone(TsooniTyyp.TERRACE).windowView(true).accessible(true)
-                .posX(615).posY(130).width(35).height(35).shape("circle").build();
+        terrass4inimest = RestoraniLaud.builder()
+                .id(3L).lauaNumber("T13").mahutavus(4)
+                .tsoon(TsooniTyyp.TERRASS).aknaAll(true).lastenurk(false)
+                .posX(615).posY(130).width(70).height(50).build();
 
-        private6p = RestoraniLaud.builder()
-                .id(4L).tableNumber("T19").capacity(6)
-                .zone(TsooniTyyp.PRIVATE_ROOM).windowView(false).accessible(true)
-                .posX(45).posY(490).width(130).height(80).shape("rect").build();
+        privaat8inimest = RestoraniLaud.builder()
+                .id(4L).lauaNumber("T19").mahutavus(8)
+                .tsoon(TsooniTyyp.PRIVAATRUUM).aknaAll(false).lastenurk(true)
+                .posX(45).posY(490).width(90).height(60).build();
     }
 
-    private BroneeringFilterRequest filter(int partySize, TsooniTyyp zone) {
+    private BroneeringFilterRequest filter(int kylalisteArv, TsooniTyyp tsoon) {
         BroneeringFilterRequest f = new BroneeringFilterRequest();
-        f.setDate(LocalDate.now());
-        f.setStartTime(LocalTime.of(19, 0));
-        f.setEndTime(LocalTime.of(21, 0));
-        f.setPartySize(partySize);
-        f.setZone(zone);
+        f.setKuupaev(LocalDate.now());
+        f.setAlgusAeg(LocalTime.of(19, 0));
+        f.setLoppAeg(LocalTime.of(21, 0));
+        f.setKylalisteArv(kylalisteArv);
+        f.setTsoon(tsoon);
         return f;
     }
 
-    // ── Capacity filtering ────────────────────────────────────────────────────
+    // ── Mahutavuse filtreerimine  ────────────────────────────────────────────────────
 
     @Test
     void recommendations_excludesTablesWithInsufficientCapacity() {
-        when(tableRepository.findAll()).thenReturn(List.of(inside2p, inside4p));
+        when(laudRepository.findAll()).thenReturn(List.of(sees2inimest, sees6inimest));
         when(broneeringRepository.findActiveBookingsBetween(any(), any())).thenReturn(List.of());
 
-        List<LauaSoovitusedDTO> result = tableService.getSoovitusi(filter(3, null));
+        List<LauaSoovitusedDTO> result = lauaService.getSoovitusi(filter(3, null));
 
         assertThat(result).hasSize(2);
         assertThat(result).anySatisfy(d -> {
-            assertThat(d.getLauaNumber()).isEqualTo("T02");
+            assertThat(d.getLauaNumber()).isEqualTo("T05");
             assertThat(d.isMeetsFilter()).isTrue();
         });
         assertThat(result).anySatisfy(d -> {
-            assertThat(d.getLauaNumber()).isEqualTo("T01");
-            assertThat(d.isMeetsFilter()).isFalse(); // capacity 2 < 3
+            assertThat(d.getLauaNumber()).isEqualTo("T08");
+            assertThat(d.isMeetsFilter()).isFalse(); // mahutavus 2 < 3
         });
     }
 
     @Test
-    void recommendations_exactCapacityMatchScoresHigher() {
-        when(tableRepository.findAll()).thenReturn(List.of(inside2p, inside4p));
+    void soovitused_skoorOnSuuremKuiTapneArv() {
+        when(laudRepository.findAll()).thenReturn(List.of(sees2inimest, sees6inimest));
         when(broneeringRepository.findActiveBookingsBetween(any(), any())).thenReturn(List.of());
 
-        // partySize=2: T01 is exact match, T02 has excess seats
-        List<LauaSoovitusedDTO> result = tableService.getSoovitusi(filter(2, null));
+        // kui kylaliste arv on 2, siis T08 sobib täpselt, T05 on liiga palju
+        List<LauaSoovitusedDTO> result = lauaService.getSoovitusi(filter(2, null));
 
         LauaSoovitusedDTO best = result.stream()
                 .filter(LauaSoovitusedDTO::isMeetsFilter)
                 .findFirst().orElseThrow();
-        assertThat(best.getLauaNumber()).isEqualTo("T01");
+        assertThat(best.getLauaNumber()).isEqualTo("T08");
         assertThat(best.getSkoor()).isGreaterThan(
-                result.stream().filter(d -> d.getLauaNumber().equals("T02"))
+                result.stream().filter(d -> d.getLauaNumber().equals("T05"))
                         .findFirst().orElseThrow().getSkoor());
     }
 
-    // ── Zone filtering ────────────────────────────────────────────────────────
+    // ── Tsooni filtreerimine ────────────────────────────────────────────────────────
 
     @Test
-    void recommendations_filtersOutWrongZone() {
-        when(tableRepository.findAll()).thenReturn(List.of(inside4p, terrace4p));
+    void soovitused_valeTsooniValjaFiltreerimine() {
+        when(laudRepository.findAll()).thenReturn(List.of(sees6inimest, terrass4inimest));
         when(broneeringRepository.findActiveBookingsBetween(any(), any())).thenReturn(List.of());
 
-        List<LauaSoovitusedDTO> result = tableService.getSoovitusi(filter(2, TsooniTyyp.TERRASS));
+        List<LauaSoovitusedDTO> result = lauaService.getSoovitusi(filter(2, TsooniTyyp.TERRASS));
 
         assertThat(result.stream().filter(d -> d.getTsoon() == TsooniTyyp.SISESAAL)
                 .allMatch(d -> !d.isMeetsFilter())).isTrue();
@@ -127,90 +126,89 @@ class LauaServiceTest {
                 .allMatch(LauaSoovitusedDTO::isMeetsFilter)).isTrue();
     }
 
-    // ── Availability ──────────────────────────────────────────────────────────
+    // ── Saadavus ──────────────────────────────────────────────────────────
 
     @Test
-    void recommendations_marksOccupiedTablesUnavailable() {
+    void soovitused_broneeritudLauduEiSaaValida() {
         Broneering existingBooking = Broneering.builder()
-                .id(99L).laud(inside4p)
-                .startTime(LocalDateTime.of(LocalDate.now(), LocalTime.of(18, 0)))
-                .endTime(LocalDateTime.of(LocalDate.now(), LocalTime.of(20, 0)))
-                .status(BroneeringuStaatus.CONFIRMED).build();
+                .id(99L).laud(sees6inimest)
+                .algusAeg(LocalDateTime.of(LocalDate.now(), LocalTime.of(18, 0)))
+                .loppAeg(LocalDateTime.of(LocalDate.now(), LocalTime.of(20, 0)))
+                .staatus(BroneeringuStaatus.CONFIRMED).build();
 
-        when(tableRepository.findAll()).thenReturn(List.of(inside4p));
+        when(laudRepository.findAll()).thenReturn(List.of(sees6inimest));
         when(broneeringRepository.findActiveBookingsBetween(any(), any()))
                 .thenReturn(List.of(existingBooking));
 
-        List<LauaSoovitusedDTO> result = tableService.getRecommendations(filter(2, null));
+        List<LauaSoovitusedDTO> result = lauaService.getSoovitusi(filter(2, null));
 
         assertThat(result).hasSize(1);
-        assertThat(result.get(0).isAvailable()).isFalse();
-        assertThat(result.get(0).getScore()).isNegative();
+        assertThat(result.get(0).isVaba()).isFalse();
+        assertThat(result.get(0).getSkoor()).isNegative();
     }
 
     @Test
-    void recommendations_freeTableIsAvailable() {
-        when(tableRepository.findAll()).thenReturn(List.of(inside4p));
+    void soovitused_vabaLaudOnSaadaval() {
+        when(laudRepository.findAll()).thenReturn(List.of(sees6inimest));
         when(broneeringRepository.findActiveBookingsBetween(any(), any())).thenReturn(List.of());
 
-        List<LauaSoovitusedDTO> result = tableService.getRecommendations(filter(2, null));
+        List<LauaSoovitusedDTO> result = lauaService.getSoovitusi(filter(2, null));
 
-        assertThat(result.get(0).isAvailable()).isTrue();
-        assertThat(result.get(0).getScore()).isPositive();
+        assertThat(result.get(0).isVaba()).isTrue();
+        assertThat(result.get(0).getSkoor()).isPositive();
     }
 
-    // ── Preference scoring ────────────────────────────────────────────────────
+    // ── Eelistustega skoor ────────────────────────────────────────────────────
 
     @Test
-    void calculateScore_windowPreferenceBonusApplied() {
+    void skooriArvutus_eelistusegaAknaAll() {
         BroneeringFilterRequest f = filter(2, null);
-        f.setPreferWindowView(true);
+        f.setAknaAll(true);
 
-        int withWindow    = tableService.calculateScore(inside4p, f); // windowView=true
-        int withoutWindow = tableService.calculateScore(inside2p, f); // windowView=false
+        int aknaga = lauaService.arvutaSkoor(terrass4inimest, f);
+        int aknata = lauaService.arvutaSkoor(sees6inimest, f);
 
-        assertThat(withWindow).isGreaterThan(withoutWindow);
+        assertThat(aknaga).isGreaterThan(aknata);
     }
 
     @Test
-    void calculateScore_accessibilityPreferenceBonusApplied() {
+    void skooriArvutus_eelistusegaLastenurgaJuures() {
         BroneeringFilterRequest f = filter(2, null);
-        f.setPreferAccessible(true);
+        f.setLastenurk(true);
 
-        int withAccess    = tableService.calculateScore(inside2p, f);  // accessible=true
-        int withoutAccess = tableService.calculateScore(inside4p, f);  // accessible=false
+        int lastenurgaga    = lauaService.arvutaSkoor(sees2inimest, f);
+        int lastenurgata = lauaService.arvutaSkoor(terrass4inimest, f);
 
-        // inside2p has +25 accessible bonus but also lower capacity excess penalty for party=2
-        assertThat(withAccess).isGreaterThan(withoutAccess);
+        assertThat(lastenurgaga).isGreaterThan(lastenurgata);
     }
 
     @Test
-    void calculateScore_privacyPreferenceBonusApplied() {
+    void skooriArvutus_eelistusegaPrivaatsus() {
         BroneeringFilterRequest f = filter(4, null);
-        f.setPreferPrivacy(true);
+        f.setPrivaatsus(true);
 
-        int privateScore = tableService.calculateScore(private6p, f);  // PRIVATE_ROOM
-        int insideScore  = tableService.calculateScore(inside4p, f);   // INSIDE
+        int privaatsusSkoor = lauaService.arvutaSkoor(privaat8inimest, f);
+        int sisesaalSkoor  = lauaService.arvutaSkoor(sees6inimest, f);
 
-        assertThat(privateScore).isGreaterThan(insideScore);
+        assertThat(privaatsusSkoor).isGreaterThan(sisesaalSkoor);
     }
 
-    // ── Ordering ──────────────────────────────────────────────────────────────
+    // ── Tellimine ──────────────────────────────────────────────────────────────
 
     @Test
-    void recommendations_sortedByScoreDescending() {
-        when(tableRepository.findAll()).thenReturn(List.of(inside2p, inside4p, terrace4p, private6p));
+    void soovitused_SkoorLangevasJarjestuses() {
+        when(laudRepository.findAll()).thenReturn(List.of(sees2inimest, sees6inimest, terrass4inimest, privaat8inimest));
         when(broneeringRepository.findActiveBookingsBetween(any(), any())).thenReturn(List.of());
 
         BroneeringFilterRequest f = filter(2, null);
-        f.setPreferWindowView(true);
-        f.setPreferAccessible(true);
+        f.setAknaAll(true);
+        f.setLastenurk(true);
 
-        List<LauaSoovitusedDTO> result = tableService.getRecommendations(f);
+        List<LauaSoovitusedDTO> result = lauaService.getSoovitusi(f);
 
         for (int i = 0; i < result.size() - 1; i++) {
-            assertThat(result.get(i).getScore())
-                    .isGreaterThanOrEqualTo(result.get(i + 1).getScore());
+            assertThat(result.get(i).getSkoor())
+                    .isGreaterThanOrEqualTo(result.get(i + 1).getSkoor());
         }
     }
 }

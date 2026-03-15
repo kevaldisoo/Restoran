@@ -63,7 +63,7 @@ public class LauaService {
                     boolean vaba = !occupiedIds.contains(t.getId());
                     boolean meetsFilter = sobibFiltriga(t, filter);
                     int score = (vaba && meetsFilter)
-                            ? calculateScore(t, filter)
+                            ? arvutaSkoor(t, filter)
                             : (vaba ? 0 : -1);
                     return LauaSoovitusedDTO.from(t, vaba, meetsFilter, score);
                 })
@@ -232,7 +232,7 @@ public class LauaService {
      * Suurem skoor = rohkem soovitatud.
      * Algne skoor 100, maha läheb punkte kui on kohti üle ning eelistused annavad punkte juurde.
      */
-    int calculateScore(RestoraniLaud t, BroneeringFilterRequest f) {
+    int arvutaSkoor(RestoraniLaud t, BroneeringFilterRequest f) {
         int skoor = 100;
 
         // Eelistame, et toolid ei jääks tühjaks

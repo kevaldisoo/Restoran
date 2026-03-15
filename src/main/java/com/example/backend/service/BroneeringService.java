@@ -12,11 +12,15 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.LocalTime;
 import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 public class BroneeringService {
+
+    private static final LocalTime AVAMISE_AEG  = LocalTime.of(11, 0);
+    private static final LocalTime SULGEMISE_AEG = LocalTime.of(23, 0);
 
     private final BroneeringRepository broneeringRepository;
     private final RestoraniLaudRepository restoraniLaudRepository;
@@ -27,7 +31,17 @@ public class BroneeringService {
                 .toList();
     }
 
+    /**
+     * Restoran on avatud kella 11 ja 23 vahel
+     */
     public BroneeringDTO createBooking(BroneeringCreateRequest req) {
+        LocalTime algusKell = req.getAlgusAeg().toLocalTime();
+        LocalTime loppKell  = req.getLoppAeg().toLocalTime();
+        if (algusKell.isBefore(AVAMISE_AEG) || loppKell.isAfter(SULGEMISE_AEG)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Restoran on avatud 11:00–23:00");
+        }
+
         RestoraniLaud laud = restoraniLaudRepository.findById(req.getLauaId())
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND, "Table not found: " + req.getLauaId()));

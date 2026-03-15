@@ -1,8 +1,8 @@
 package com.example.backend.service;
 
-import com.example.backend.dto.BookingCreateRequest;
-import com.example.backend.dto.BookingDTO;
-import com.example.backend.model.Booking;
+import com.example.backend.dto.BroneeringCreateRequest;
+import com.example.backend.dto.BroneeringDTO;
+import com.example.backend.model.Broneering;
 import com.example.backend.model.BroneeringuStaatus;
 import com.example.backend.model.RestoraniLaud;
 import com.example.backend.model.TsooniTyyp;
@@ -31,59 +31,59 @@ import static org.mockito.Mockito.*;
 class BroneeringServiceTest {
 
     @Mock private BroneeringRepository broneeringRepository;
-    @Mock private RestoraniLaudRepository tableRepository;
+    @Mock private RestoraniLaudRepository laudRepository;
 
     @InjectMocks
     private BroneeringService broneeringService;
 
-    private RestoraniLaud table;
-    private BookingCreateRequest validRequest;
+    private RestoraniLaud laud;
+    private BroneeringCreateRequest validRequest;
     private LocalDateTime start;
     private LocalDateTime end;
 
     @BeforeEach
     void setUp() {
-        table = RestoraniLaud.builder()
-                .id(1L).tableNumber("T01").capacity(4)
-                .zone(TsooniTyyp.INSIDE).windowView(false).accessible(true)
-                .posX(30).posY(70).width(75).height(50).shape("rect").build();
+        laud = RestoraniLaud.builder()
+                .id(1L).lauaNumber("T01").mahutavus(10)
+                .tsoon(TsooniTyyp.SISESAAL).aknaAll(true).lastenurk(false)
+                .posX(30).posY(70).width(100).height(65).build();
 
         start = LocalDateTime.of(LocalDate.now(), LocalTime.of(19, 0));
         end   = LocalDateTime.of(LocalDate.now(), LocalTime.of(21, 0));
 
-        validRequest = new BookingCreateRequest();
-        validRequest.setTableId(1L);
-        validRequest.setCustomerName("Test Customer");
-        validRequest.setPartySize(3);
-        validRequest.setStartTime(start);
-        validRequest.setEndTime(end);
-        validRequest.setNotes("Anniversary dinner");
+        validRequest = new BroneeringCreateRequest();
+        validRequest.setLauaId(1L);
+        validRequest.setKylastaja("Test kylastaja");
+        validRequest.setKylalisteArv(8);
+        validRequest.setAlgusAeg(start);
+        validRequest.setLoppAeg(end);
+        validRequest.setKommentaar("test");
     }
 
     @Test
     void createBooking_successfullyCreatesBooking() {
-        when(tableRepository.findById(1L)).thenReturn(Optional.of(table));
+        when(laudRepository.findById(1L)).thenReturn(Optional.of(laud));
         when(broneeringRepository.findConflictingBookings(any(), any(), any())).thenReturn(List.of());
-        Booking saved = Booking.builder()
-                .id(10L).table(table)
-                .customerName("Test Customer").partySize(3)
-                .startTime(start).endTime(end).status(BroneeringuStaatus.CONFIRMED).notes("Anniversary dinner")
+        Broneering saved = Broneering.builder()
+                .id(10L).laud(laud)
+                .kylaline("Test kylastaja").kylalisteArv(8)
+                .algusAeg(start).loppAeg(end).staatus(BroneeringuStaatus.CONFIRMED).kommentaar("test")
                 .build();
-        when(broneeringRepository.save(any(Booking.class))).thenReturn(saved);
+        when(broneeringRepository.save(any(Broneering.class))).thenReturn(saved);
 
-        BookingDTO result = broneeringService.createBooking(validRequest);
+        BroneeringDTO result = broneeringService.createBooking(validRequest);
 
         assertThat(result.getId()).isEqualTo(10L);
-        assertThat(result.getTableNumber()).isEqualTo("T01");
-        assertThat(result.getCustomerName()).isEqualTo("Test Customer");
-        assertThat(result.getStatus()).isEqualTo(BroneeringuStaatus.CONFIRMED);
-        verify(broneeringRepository).save(any(Booking.class));
+        assertThat(result.getLauaNumber()).isEqualTo("T01");
+        assertThat(result.getKylaline()).isEqualTo("Test kylastaja");
+        assertThat(result.getStaatus()).isEqualTo(BroneeringuStaatus.CONFIRMED);
+        verify(broneeringRepository).save(any(Broneering.class));
     }
 
     @Test
     void createBooking_throwsNotFoundWhenTableMissing() {
-        when(tableRepository.findById(99L)).thenReturn(Optional.empty());
-        validRequest.setTableId(99L);
+        when(laudRepository.findById(99L)).thenReturn(Optional.empty());
+        validRequest.setLauaId(99L);
 
         assertThatThrownBy(() -> broneeringService.createBooking(validRequest))
                 .isInstanceOf(ResponseStatusException.class)
@@ -92,41 +92,41 @@ class BroneeringServiceTest {
 
     @Test
     void createBooking_throwsBadRequestWhenPartySizeExceedsCapacity() {
-        when(tableRepository.findById(1L)).thenReturn(Optional.of(table));
-        validRequest.setPartySize(10); // table capacity is 4
+        when(laudRepository.findById(1L)).thenReturn(Optional.of(laud));
+        validRequest.setKylalisteArv(30);
 
         assertThatThrownBy(() -> broneeringService.createBooking(validRequest))
                 .isInstanceOf(ResponseStatusException.class)
-                .hasMessageContaining("capacity");
+                .hasMessageContaining("mahutavus");
     }
 
     @Test
     void createBooking_throwsConflictWhenTimeSlotTaken() {
-        Booking conflicting = Booking.builder()
-                .id(5L).table(table).status(BroneeringuStaatus.CONFIRMED)
-                .startTime(start.minusHours(1)).endTime(end.minusHours(1)).build();
+        Broneering conflicting = Broneering.builder()
+                .id(5L).laud(laud).staatus(BroneeringuStaatus.CONFIRMED)
+                .algusAeg(start.minusHours(1)).loppAeg(end.minusHours(1)).build();
 
-        when(tableRepository.findById(1L)).thenReturn(Optional.of(table));
+        when(laudRepository.findById(1L)).thenReturn(Optional.of(laud));
         when(broneeringRepository.findConflictingBookings(any(), any(), any()))
                 .thenReturn(List.of(conflicting));
 
         assertThatThrownBy(() -> broneeringService.createBooking(validRequest))
                 .isInstanceOf(ResponseStatusException.class)
-                .hasMessageContaining("already booked");
+                .hasMessageContaining("juba broneeritud");
     }
 
     @Test
     void cancelBooking_setsStatusToCancelled() {
-        Booking booking = Booking.builder()
-                .id(10L).table(table).customerName("Test").partySize(2)
-                .startTime(start).endTime(end).status(BroneeringuStaatus.CONFIRMED).notes("").build();
+        Broneering booking = Broneering.builder()
+                .id(10L).laud(laud).kylaline("Test").kylalisteArv(8)
+                .algusAeg(start).loppAeg(end).staatus(BroneeringuStaatus.CONFIRMED).kommentaar("").build();
 
         when(broneeringRepository.findById(10L)).thenReturn(Optional.of(booking));
-        when(broneeringRepository.save(any(Booking.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(broneeringRepository.save(any(Broneering.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        BookingDTO result = broneeringService.cancelBooking(10L);
+        BroneeringDTO result = broneeringService.cancelBooking(10L);
 
-        assertThat(result.getStatus()).isEqualTo(BroneeringuStaatus.CANCELLED);
+        assertThat(result.getStaatus()).isEqualTo(BroneeringuStaatus.CANCELLED);
     }
 
     @Test
@@ -140,17 +140,17 @@ class BroneeringServiceTest {
 
     @Test
     void getAllBookings_returnsAllAsDTOs() {
-        Booking b1 = Booking.builder().id(1L).table(table).customerName("A").partySize(2)
-                .startTime(start).endTime(end).status(BroneeringuStaatus.CONFIRMED).notes("").build();
-        Booking b2 = Booking.builder().id(2L).table(table).customerName("B").partySize(3)
-                .startTime(start.plusDays(1)).endTime(end.plusDays(1))
-                .status(BroneeringuStaatus.CONFIRMED).notes("").build();
+        Broneering b1 = Broneering.builder().id(1L).laud(laud).kylaline("A").kylalisteArv(2)
+                .algusAeg(start).loppAeg(end).staatus(BroneeringuStaatus.CONFIRMED).kommentaar("").build();
+        Broneering b2 = Broneering.builder().id(2L).laud(laud).kylaline("B").kylalisteArv(3)
+                .algusAeg(start.plusDays(1)).loppAeg(end.plusDays(1))
+                .staatus(BroneeringuStaatus.CONFIRMED).kommentaar("").build();
 
         when(broneeringRepository.findAll()).thenReturn(List.of(b1, b2));
 
-        List<BookingDTO> result = broneeringService.getAllBookings();
+        List<BroneeringDTO> result = broneeringService.getAllBookings();
 
         assertThat(result).hasSize(2);
-        assertThat(result).extracting(BookingDTO::getCustomerName).containsExactlyInAnyOrder("A", "B");
+        assertThat(result).extracting(BroneeringDTO::getKylaline).containsExactlyInAnyOrder("A", "B");
     }
 }
